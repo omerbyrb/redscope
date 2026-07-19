@@ -68,21 +68,29 @@ def cli(ctx, config, output, threads, quiet):
 @click.option("--modules", "-m", multiple=True, help="Modules to run (can specify multiple)")
 @click.option("--all-recon", is_flag=True, help="Run all recon modules")
 @click.option("--all-web", is_flag=True, help="Run all web modules")
+@click.option("--all", "run_all", is_flag=True, help="Run every module")
 @click.option("--save", "-s", is_flag=True, help="Save results to JSON")
+@click.option("--report", "-r", type=click.Choice(["html", "markdown", "json", "all"]), default=None, help="Generate report after scan")
 @click.pass_context
-def scan(ctx, target, modules, all_recon, all_web, save):
+def scan(ctx, target, modules, all_recon, all_web, run_all, save, report):
     """Run one or more modules against a target."""
     engine: Engine = ctx.obj["engine"]
 
     run_modules = list(modules)
 
+    if run_all:
+        run_modules = ["dns", "subdomain", "portscan", "emailsec", "takeover",
+                       "headers", "dirbrute", "sqli", "xss", "cors", "openredirect",
+                       "ssrf", "jwt", "lfi", "cmdi", "xxe", "idor", "waf",
+                       "ssltls", "banner", "cvelookup", "serviceenum", "osfingerprint", "shodan"]
     if all_recon:
-        run_modules.extend(["dns", "subdomain", "portscan"])
+        run_modules.extend(["dns", "subdomain", "portscan", "emailsec", "takeover", "shodan"])
     if all_web:
-        run_modules.extend(["headers", "dirbrute", "sqli", "xss"])
+        run_modules.extend(["headers", "dirbrute", "sqli", "xss", "cors",
+                             "openredirect", "ssrf", "jwt", "lfi", "cmdi", "xxe", "idor", "waf"])
 
     if not run_modules:
-        log.error("No modules specified. Use --modules or --all-recon / --all-web")
+        log.error("No modules specified. Use --modules, --all-recon, --all-web, or --all")
         raise click.Abort()
 
     for mod in run_modules:
@@ -91,6 +99,13 @@ def scan(ctx, target, modules, all_recon, all_web, save):
     if save:
         out = Path(ctx.obj["output"]) / f"scan_{target.replace('://', '_').replace('/', '_')}.json"
         engine.save_results(out)
+
+    if report in ("html", "all"):
+        engine.generate_html_report(target)
+    if report in ("markdown", "all"):
+        engine.generate_markdown_report(target)
+    if report in ("json", "all"):
+        engine.generate_json_report(target)
 
 
 @cli.command("list")

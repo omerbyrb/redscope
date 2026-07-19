@@ -61,6 +61,34 @@ class Engine:
             json.dump(data, f, indent=2)
         log.info(f"Results saved to [green]{output_path}[/]")
 
+    def generate_html_report(self, target: str, output_path: Optional[Path] = None) -> Optional[Path]:
+        from modules.report.html import Module as HTMLModule
+        if not self.results:
+            log.warning("No results to report")
+            return None
+        safe = target.replace("https://", "").replace("http://", "").replace("/", "_").replace(":", "_")
+        out = output_path or Path(f"output/report_{safe}.html")
+        mod = HTMLModule(self.config)
+        return mod.render_and_save(target, self.results, out)
+
+    def generate_markdown_report(self, target: str, output_path: Optional[Path] = None) -> Optional[Path]:
+        from modules.report.json_report import Module as ReportModule
+        if not self.results:
+            return None
+        safe = target.replace("https://", "").replace("http://", "").replace("/", "_").replace(":", "_")
+        out = output_path or Path(f"output/report_{safe}.md")
+        mod = ReportModule(self.config)
+        return mod.save_markdown(target, self.results, out)
+
+    def generate_json_report(self, target: str, output_path: Optional[Path] = None) -> Optional[Path]:
+        from modules.report.json_report import Module as ReportModule
+        if not self.results:
+            return None
+        safe = target.replace("https://", "").replace("http://", "").replace("/", "_").replace(":", "_")
+        out = output_path or Path(f"output/report_{safe}.json")
+        mod = ReportModule(self.config)
+        return mod.save_json(target, self.results, out)
+
     def _print_result(self, result: ScanResult) -> None:
         if not result.findings:
             log.info(f"[dim]No findings for {result.module}[/]")
