@@ -149,5 +149,16 @@ def plugin(ctx, plugin_path, target):
     engine.run_plugin(Path(plugin_path), target)
 
 
+@cli.command()
+@click.option("--host", default="127.0.0.1", help="Host to bind (default: 127.0.0.1)")
+@click.option("--port", default=5000, help="Port to bind (default: 5000)")
+@click.option("--debug", is_flag=True, help="Enable Flask debug mode")
+def dashboard(host, port, debug):
+    """Launch the RedScope web dashboard."""
+    from dashboard.app import run
+    log.info(f"Starting dashboard at [bold green]http://{host}:{port}[/]")
+    run(host=host, port=port, debug=debug)
+
+
 if __name__ == "__main__":
     cli(obj={})

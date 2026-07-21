@@ -3,3 +3,4 @@ rich>=13.0
 requests>=2.31
 dnspython>=2.4
 python-nmap>=0.7
+flask>=3.0
