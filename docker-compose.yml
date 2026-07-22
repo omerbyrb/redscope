@@ -1,0 +1,35 @@
+version: "3.9"
+
+services:
+  redscope:
+    build: .
+    image: redscope:latest
+    container_name: redscope
+    volumes:
+      - ./output:/app/output          # Persist scan results and reports
+      - ./wordlists:/app/wordlists    # Custom wordlists
+      - ~/.redscope:/root/.redscope   # Config with API keys
+    ports:
+      - "5000:5000"                   # Web dashboard
+    environment:
+      - PYTHONUNBUFFERED=1
+    entrypoint: ["python", "cli.py"]
+    command: ["--help"]
+
+  # Dashboard service — persistent web UI
+  redscope-dashboard:
+    build: .
+    image: redscope:latest
+    container_name: redscope-dashboard
+    volumes:
+      - ./output:/app/output
+      - ./wordlists:/app/wordlists
+      - ~/.redscope:/root/.redscope
+    ports:
+      - "5000:5000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: ["dashboard", "--host", "0.0.0.0", "--port", "5000"]
+    restart: unless-stopped
+    profiles:
+      - dashboard

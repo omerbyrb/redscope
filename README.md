@@ -27,10 +27,26 @@
 
 ## Installation
 
+### Local
 ```bash
-git clone https://github.com/omerbayirbasi/redscope
+git clone https://github.com/omerbyrb/redscope
 cd redscope
 pip install -r requirements.txt
+```
+
+### Docker
+```bash
+# Build
+docker build -t redscope .
+
+# Run a scan
+docker run --rm -v $(pwd)/output:/app/output redscope scan example.com --modules dns headers --report html
+
+# Launch web dashboard
+docker run --rm -p 5000:5000 -v $(pwd)/output:/app/output redscope dashboard --host 0.0.0.0
+
+# Using docker-compose (dashboard)
+docker compose --profile dashboard up -d
 ```
 
 ## Quick Start
