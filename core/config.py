@@ -1,7 +1,7 @@
-import os
+import copy
 import json
+import os
 from pathlib import Path
-from dataclasses import dataclass, field, asdict
 from typing import Optional
 
 
@@ -43,7 +43,7 @@ def load_config(path: Optional[Path] = None) -> dict:
         with open(config_file) as f:
             user_config = json.load(f)
         return _deep_merge(DEFAULT_CONFIG, user_config)
-    return DEFAULT_CONFIG.copy()
+    return copy.deepcopy(DEFAULT_CONFIG)
 
 
 def save_config(config: dict, path: Optional[Path] = None) -> None:
