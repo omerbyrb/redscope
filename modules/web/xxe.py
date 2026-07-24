@@ -3,7 +3,7 @@ from typing import List, Optional
 
 import requests
 
-from core.base_module import BaseModule, ScanResult, Finding
+from core.base_module import BaseModule, Finding, ScanResult
 
 # XXE payloads targeting different parsers and bypass techniques
 XXE_PAYLOADS = [
@@ -72,15 +72,32 @@ CONTENT_TYPES = [
 ]
 
 XML_ENDPOINTS = [
-    "/api", "/api/v1", "/api/v2", "/soap", "/xmlrpc", "/xmlrpc.php",
-    "/rpc", "/service", "/ws", "/webservice", "/upload", "/import",
-    "/parse", "/convert", "/feed", "/rss", "/atom", "/sitemap.xml",
+    "/api",
+    "/api/v1",
+    "/api/v2",
+    "/soap",
+    "/xmlrpc",
+    "/xmlrpc.php",
+    "/rpc",
+    "/service",
+    "/ws",
+    "/webservice",
+    "/upload",
+    "/import",
+    "/parse",
+    "/convert",
+    "/feed",
+    "/rss",
+    "/atom",
+    "/sitemap.xml",
 ]
 
 
 class Module(BaseModule):
     name = "xxe"
-    description = "XXE detector — file read, SSRF, XInclude, SVG, and PHP wrapper injection"
+    description = (
+        "XXE detector — file read, SSRF, XInclude, SVG, and PHP wrapper injection"
+    )
     author = "RedScope"
     version = "1.0.0"
 
@@ -100,7 +117,9 @@ class Module(BaseModule):
         self.log.info(f"  Found {len(endpoints)} XML-accepting endpoint(s)")
 
         if not endpoints:
-            self.log.warning("  No XML endpoints found — trying base URL with all content types")
+            self.log.warning(
+                "  No XML endpoints found — trying base URL with all content types"
+            )
             endpoints = [(base, "application/xml")]
 
         for endpoint, content_type in endpoints:
@@ -108,7 +127,16 @@ class Module(BaseModule):
             for payload, pattern, technique, severity in XXE_PAYLOADS:
                 if pattern is None:
                     continue  # Skip DoS payload in automated mode
-                finding = self._probe(session, endpoint, payload, pattern, technique, severity, content_type, timeout)
+                finding = self._probe(
+                    session,
+                    endpoint,
+                    payload,
+                    pattern,
+                    technique,
+                    severity,
+                    content_type,
+                    timeout,
+                )
                 if finding:
                     result.add_finding(finding)
                     break  # One confirmed XXE per endpoint is enough
@@ -138,13 +166,25 @@ class Module(BaseModule):
                     )
                     if resp.status_code not in (404, 405):
                         found.append((url, ct))
-                        self.log.info(f"  [green]XML endpoint:[/] {url} ({ct}) → {resp.status_code}")
+                        self.log.info(
+                            f"  [green]XML endpoint:[/] {url} ({ct}) → {resp.status_code}"
+                        )
                         break
                 except requests.RequestException:
                     continue
         return found
 
-    def _probe(self, session, endpoint, payload, pattern, technique, severity, content_type, timeout) -> Optional[Finding]:
+    def _probe(
+        self,
+        session,
+        endpoint,
+        payload,
+        pattern,
+        technique,
+        severity,
+        content_type,
+        timeout,
+    ) -> Optional[Finding]:
         for method in ("POST", "PUT"):
             try:
                 resp = getattr(session, method.lower())(
@@ -156,7 +196,9 @@ class Module(BaseModule):
                 )
                 if pattern and re.search(pattern, resp.text, re.IGNORECASE):
                     match = re.search(pattern, resp.text, re.IGNORECASE)
-                    self.log.info(f"  [bold red]XXE CONFIRMED[/] {technique} via {method}")
+                    self.log.info(
+                        f"  [bold red]XXE CONFIRMED[/] {technique} via {method}"
+                    )
                     return Finding(
                         title=f"XXE Injection — {technique}",
                         severity=severity,

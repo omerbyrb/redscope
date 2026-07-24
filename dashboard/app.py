@@ -17,38 +17,39 @@ SCANS: Dict[str, dict] = {}
 
 ALL_MODULES = [
     # Recon
-    {"id": "dns",           "label": "DNS Recon",           "category": "recon"},
-    {"id": "subdomain",     "label": "Subdomain Enum",      "category": "recon"},
-    {"id": "portscan",      "label": "Port Scanner",        "category": "recon"},
-    {"id": "emailsec",      "label": "Email Security",      "category": "recon"},
-    {"id": "takeover",      "label": "Subdomain Takeover",  "category": "recon"},
-    {"id": "shodan",        "label": "Shodan Intel",        "category": "recon"},
+    {"id": "dns", "label": "DNS Recon", "category": "recon"},
+    {"id": "subdomain", "label": "Subdomain Enum", "category": "recon"},
+    {"id": "portscan", "label": "Port Scanner", "category": "recon"},
+    {"id": "emailsec", "label": "Email Security", "category": "recon"},
+    {"id": "takeover", "label": "Subdomain Takeover", "category": "recon"},
+    {"id": "shodan", "label": "Shodan Intel", "category": "recon"},
     # Web
-    {"id": "headers",       "label": "HTTP Headers",        "category": "web"},
-    {"id": "dirbrute",      "label": "Dir Brute Force",     "category": "web"},
-    {"id": "sqli",          "label": "SQL Injection",       "category": "web"},
-    {"id": "xss",           "label": "XSS Scanner",         "category": "web"},
-    {"id": "cors",          "label": "CORS Check",          "category": "web"},
-    {"id": "openredirect",  "label": "Open Redirect",       "category": "web"},
-    {"id": "ssrf",          "label": "SSRF Detector",       "category": "web"},
-    {"id": "jwt",           "label": "JWT Analyzer",        "category": "web"},
-    {"id": "lfi",           "label": "LFI / RFI",           "category": "web"},
-    {"id": "cmdi",          "label": "Command Injection",   "category": "web"},
-    {"id": "xxe",           "label": "XXE Injection",       "category": "web"},
-    {"id": "idor",          "label": "IDOR Checker",        "category": "web"},
-    {"id": "waf",           "label": "WAF Detector",        "category": "web"},
+    {"id": "headers", "label": "HTTP Headers", "category": "web"},
+    {"id": "dirbrute", "label": "Dir Brute Force", "category": "web"},
+    {"id": "sqli", "label": "SQL Injection", "category": "web"},
+    {"id": "xss", "label": "XSS Scanner", "category": "web"},
+    {"id": "cors", "label": "CORS Check", "category": "web"},
+    {"id": "openredirect", "label": "Open Redirect", "category": "web"},
+    {"id": "ssrf", "label": "SSRF Detector", "category": "web"},
+    {"id": "jwt", "label": "JWT Analyzer", "category": "web"},
+    {"id": "lfi", "label": "LFI / RFI", "category": "web"},
+    {"id": "cmdi", "label": "Command Injection", "category": "web"},
+    {"id": "xxe", "label": "XXE Injection", "category": "web"},
+    {"id": "idor", "label": "IDOR Checker", "category": "web"},
+    {"id": "waf", "label": "WAF Detector", "category": "web"},
     # Network
-    {"id": "ssltls",        "label": "SSL/TLS Analyzer",   "category": "network"},
-    {"id": "banner",        "label": "Banner Grabber",      "category": "network"},
-    {"id": "cvelookup",     "label": "CVE Lookup",          "category": "network"},
-    {"id": "serviceenum",   "label": "Service Enum",        "category": "network"},
-    {"id": "osfingerprint", "label": "OS Fingerprint",      "category": "network"},
+    {"id": "ssltls", "label": "SSL/TLS Analyzer", "category": "network"},
+    {"id": "banner", "label": "Banner Grabber", "category": "network"},
+    {"id": "cvelookup", "label": "CVE Lookup", "category": "network"},
+    {"id": "serviceenum", "label": "Service Enum", "category": "network"},
+    {"id": "osfingerprint", "label": "OS Fingerprint", "category": "network"},
 ]
 
 SEVERITY_ORDER = ["critical", "high", "medium", "low", "info"]
 
 
 # ── Routes ────────────────────────────────────────────────────────────────────
+
 
 @app.route("/")
 def index():
@@ -80,7 +81,9 @@ def start_scan():
         "counts": {s: 0 for s in SEVERITY_ORDER},
     }
 
-    thread = threading.Thread(target=_run_scan, args=(scan_id, target, modules), daemon=True)
+    thread = threading.Thread(
+        target=_run_scan, args=(scan_id, target, modules), daemon=True
+    )
     thread.start()
 
     return jsonify({"scan_id": scan_id})
@@ -96,22 +99,25 @@ def get_scan(scan_id):
 
 @app.route("/api/scans")
 def list_scans():
-    return jsonify([
-        {
-            "id": s["id"],
-            "target": s["target"],
-            "status": s["status"],
-            "started_at": s["started_at"],
-            "total": sum(s["counts"].values()),
-            "critical": s["counts"]["critical"],
-        }
-        for s in reversed(list(SCANS.values()))
-    ])
+    return jsonify(
+        [
+            {
+                "id": s["id"],
+                "target": s["target"],
+                "status": s["status"],
+                "started_at": s["started_at"],
+                "total": sum(s["counts"].values()),
+                "critical": s["counts"]["critical"],
+            }
+            for s in reversed(list(SCANS.values()))
+        ]
+    )
 
 
 @app.route("/api/scan/<scan_id>/report")
 def download_report(scan_id):
     from flask import send_file
+
     scan = SCANS.get(scan_id)
     if not scan or scan["status"] != "done":
         return jsonify({"error": "Scan not complete"}), 404
@@ -120,13 +126,16 @@ def download_report(scan_id):
     if not engine:
         return jsonify({"error": "Engine not available"}), 500
 
-    safe = scan["target"].replace("https://", "").replace("http://", "").replace("/", "_")
+    safe = (
+        scan["target"].replace("https://", "").replace("http://", "").replace("/", "_")
+    )
     path = Path(f"output/report_{safe}.html")
     engine.generate_html_report(scan["target"], path)
     return send_file(path, as_attachment=True)
 
 
 # ── Background scan runner ────────────────────────────────────────────────────
+
 
 def _run_scan(scan_id: str, target: str, modules: List[str]) -> None:
     scan = SCANS[scan_id]
@@ -144,7 +153,9 @@ def _run_scan(scan_id: str, target: str, modules: List[str]) -> None:
                     f_dict = finding.to_dict()
                     f_dict["module"] = mod_name
                     scan["findings"].append(f_dict)
-                    scan["counts"][finding.severity] = scan["counts"].get(finding.severity, 0) + 1
+                    scan["counts"][finding.severity] = (
+                        scan["counts"].get(finding.severity, 0) + 1
+                    )
                 scan["log"].append(
                     f"[{_now()}] {mod_name} done — {len(result.findings)} findings"
                 )
@@ -155,11 +166,17 @@ def _run_scan(scan_id: str, target: str, modules: List[str]) -> None:
             scan["log"].append(f"[{_now()}] {mod_name} ERROR: {e}")
 
     scan["findings"].sort(
-        key=lambda x: SEVERITY_ORDER.index(x["severity"]) if x["severity"] in SEVERITY_ORDER else 99
+        key=lambda x: (
+            SEVERITY_ORDER.index(x["severity"])
+            if x["severity"] in SEVERITY_ORDER
+            else 99
+        )
     )
     scan["status"] = "done"
     scan["finished_at"] = datetime.utcnow().isoformat()
-    scan["log"].append(f"[{_now()}] Scan complete — {len(scan['findings'])} total findings")
+    scan["log"].append(
+        f"[{_now()}] Scan complete — {len(scan['findings'])} total findings"
+    )
 
 
 def _now() -> str:

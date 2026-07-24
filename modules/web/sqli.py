@@ -1,11 +1,11 @@
-import time
 import re
+import time
 from typing import List, Optional
-from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
+from urllib.parse import parse_qs, urlparse
 
 import requests
 
-from core.base_module import BaseModule, ScanResult, Finding
+from core.base_module import BaseModule, Finding, ScanResult
 
 ERROR_PATTERNS = [
     # MySQL
@@ -84,7 +84,9 @@ class Module(BaseModule):
 
         params = self._extract_params(url)
         if not params:
-            self.log.warning("No query parameters found in URL — trying common param names")
+            self.log.warning(
+                "No query parameters found in URL — trying common param names"
+            )
             params = ["id", "page", "cat", "search", "q", "user", "item", "product"]
             base_url = url
         else:
@@ -119,7 +121,9 @@ class Module(BaseModule):
                 body = resp.text.lower()
                 for pattern in ERROR_PATTERNS:
                     if re.search(pattern, body):
-                        self.log.info(f"  [bold red]SQLi FOUND[/] (error-based) param={param} payload={payload!r}")
+                        self.log.info(
+                            f"  [bold red]SQLi FOUND[/] (error-based) param={param} payload={payload!r}"
+                        )
                         return Finding(
                             title=f"SQL Injection (Error-Based) — parameter: {param}",
                             severity="critical",
@@ -145,7 +149,9 @@ class Module(BaseModule):
 
     def _test_time_based(self, session, base_url, param, timeout) -> Optional[Finding]:
         try:
-            baseline = session.get(base_url, params={param: "1"}, timeout=timeout, verify=False)
+            baseline = session.get(
+                base_url, params={param: "1"}, timeout=timeout, verify=False
+            )
             baseline_time = baseline.elapsed.total_seconds()
         except requests.RequestException:
             baseline_time = 1.0
@@ -162,7 +168,9 @@ class Module(BaseModule):
                 elapsed = time.time() - start
 
                 if elapsed >= (baseline_time + 4):
-                    self.log.info(f"  [bold red]SQLi FOUND[/] (time-based/{dbms}) param={param} delay={elapsed:.1f}s")
+                    self.log.info(
+                        f"  [bold red]SQLi FOUND[/] (time-based/{dbms}) param={param} delay={elapsed:.1f}s"
+                    )
                     return Finding(
                         title=f"SQL Injection (Time-Based Blind) — parameter: {param}",
                         severity="critical",

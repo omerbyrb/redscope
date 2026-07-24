@@ -2,10 +2,9 @@ import json
 from pathlib import Path
 from typing import List, Optional
 
+from rich import box
 from rich.console import Console
 from rich.table import Table
-from rich.panel import Panel
-from rich import box
 
 from core.base_module import ScanResult
 from core.config import load_config
@@ -28,7 +27,9 @@ class Engine:
         self.config = load_config(config_path)
         self.results: List[ScanResult] = []
 
-    def run_module(self, module_name: str, target: str, **kwargs) -> Optional[ScanResult]:
+    def run_module(
+        self, module_name: str, target: str, **kwargs
+    ) -> Optional[ScanResult]:
         module = load_module(module_name, self.config)
         if not module:
             return None
@@ -44,7 +45,9 @@ class Engine:
             log.error(f"Module {module_name} crashed: {e}")
             return None
 
-    def run_plugin(self, plugin_path: Path, target: str, **kwargs) -> Optional[ScanResult]:
+    def run_plugin(
+        self, plugin_path: Path, target: str, **kwargs
+    ) -> Optional[ScanResult]:
         module = load_plugin(plugin_path, self.config)
         if not module:
             return None
@@ -61,30 +64,54 @@ class Engine:
             json.dump(data, f, indent=2)
         log.info(f"Results saved to [green]{output_path}[/]")
 
-    def generate_html_report(self, target: str, output_path: Optional[Path] = None) -> Optional[Path]:
+    def generate_html_report(
+        self, target: str, output_path: Optional[Path] = None
+    ) -> Optional[Path]:
         from modules.report.html import Module as HTMLModule
+
         if not self.results:
             log.warning("No results to report")
             return None
-        safe = target.replace("https://", "").replace("http://", "").replace("/", "_").replace(":", "_")
+        safe = (
+            target.replace("https://", "")
+            .replace("http://", "")
+            .replace("/", "_")
+            .replace(":", "_")
+        )
         out = output_path or Path(f"output/report_{safe}.html")
         mod = HTMLModule(self.config)
         return mod.render_and_save(target, self.results, out)
 
-    def generate_markdown_report(self, target: str, output_path: Optional[Path] = None) -> Optional[Path]:
+    def generate_markdown_report(
+        self, target: str, output_path: Optional[Path] = None
+    ) -> Optional[Path]:
         from modules.report.json_report import Module as ReportModule
+
         if not self.results:
             return None
-        safe = target.replace("https://", "").replace("http://", "").replace("/", "_").replace(":", "_")
+        safe = (
+            target.replace("https://", "")
+            .replace("http://", "")
+            .replace("/", "_")
+            .replace(":", "_")
+        )
         out = output_path or Path(f"output/report_{safe}.md")
         mod = ReportModule(self.config)
         return mod.save_markdown(target, self.results, out)
 
-    def generate_json_report(self, target: str, output_path: Optional[Path] = None) -> Optional[Path]:
+    def generate_json_report(
+        self, target: str, output_path: Optional[Path] = None
+    ) -> Optional[Path]:
         from modules.report.json_report import Module as ReportModule
+
         if not self.results:
             return None
-        safe = target.replace("https://", "").replace("http://", "").replace("/", "_").replace(":", "_")
+        safe = (
+            target.replace("https://", "")
+            .replace("http://", "")
+            .replace("/", "_")
+            .replace(":", "_")
+        )
         out = output_path or Path(f"output/report_{safe}.json")
         mod = ReportModule(self.config)
         return mod.save_json(target, self.results, out)
@@ -108,7 +135,8 @@ class Engine:
             table.add_row(
                 f"[{color}]{finding.severity.upper()}[/]",
                 finding.title,
-                finding.description[:80] + ("…" if len(finding.description) > 80 else ""),
+                finding.description[:80]
+                + ("…" if len(finding.description) > 80 else ""),
             )
 
         console.print(table)

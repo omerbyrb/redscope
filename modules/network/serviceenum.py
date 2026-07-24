@@ -1,10 +1,10 @@
-import socket
-import re
 import ftplib
+import re
 import smtplib
-from typing import Optional, Dict, List, Tuple
+import socket
+from typing import Dict, Optional
 
-from core.base_module import BaseModule, ScanResult, Finding
+from core.base_module import BaseModule, Finding, ScanResult
 
 # port -> (service, probe, response_parser)
 SERVICE_DEFINITIONS: Dict[int, Dict] = {
@@ -79,7 +79,12 @@ class Module(BaseModule):
 
     def run(self, target: str, **kwargs) -> ScanResult:
         result = ScanResult(module=self.name, target=target)
-        host = target.replace("https://", "").replace("http://", "").split("/")[0].split(":")[0]
+        host = (
+            target.replace("https://", "")
+            .replace("http://", "")
+            .split("/")[0]
+            .split(":")[0]
+        )
         timeout = self.config["network"]["banner_grab_timeout"]
 
         self.log.info(f"Service enumeration on [bold]{host}[/]")
@@ -140,7 +145,13 @@ class Module(BaseModule):
         if not banner:
             return None
         weak = []
-        for algo in ["diffie-hellman-group1-sha1", "arcfour", "blowfish-cbc", "3des-cbc", "des-cbc"]:
+        for algo in [
+            "diffie-hellman-group1-sha1",
+            "arcfour",
+            "blowfish-cbc",
+            "3des-cbc",
+            "des-cbc",
+        ]:
             if algo in banner.lower():
                 weak.append(algo)
         if weak:
@@ -217,7 +228,10 @@ class Module(BaseModule):
     # ── DNS ──────────────────────────────────────────────────────────────────
 
     def _check_recursion(self, host, port, timeout) -> Optional[Finding]:
-        import dns.resolver, dns.message, dns.query
+        import dns.message
+        import dns.query
+        import dns.resolver
+
         try:
             request = dns.message.make_query("google.com", "A", use_edns=False)
             request.flags |= 0x0100  # RD bit
@@ -227,7 +241,7 @@ class Module(BaseModule):
                     title="DNS Open Recursion Enabled",
                     severity="high",
                     description=f"DNS server at {host} allows recursive queries from any source — DDoS amplification risk.",
-                    evidence=f"Recursive query for google.com succeeded (RA flag set)",
+                    evidence="Recursive query for google.com succeeded (RA flag set)",
                     remediation="Restrict recursive queries to internal/trusted IPs only.",
                     tags=["dns", "open-recursion", "amplification", "network"],
                 )
@@ -237,9 +251,14 @@ class Module(BaseModule):
         return None
 
     def _check_version(self, host, port, timeout) -> Optional[Finding]:
-        import dns.resolver, dns.message, dns.query
+        import dns.message
+        import dns.query
+        import dns.resolver
+
         try:
-            request = dns.message.make_query("version.bind", "TXT", rdclass=dns.rdataclass.CH)
+            request = dns.message.make_query(
+                "version.bind", "TXT", rdclass=dns.rdataclass.CH
+            )
             resp = dns.query.udp(request, host, timeout=timeout, port=port)
             if resp.answer:
                 version = str(resp.answer[0][0])
@@ -290,6 +309,7 @@ class Module(BaseModule):
 
     def _check_elastic_auth(self, host, port, timeout) -> Optional[Finding]:
         import requests as req
+
         try:
             resp = req.get(f"http://{host}:{port}/", timeout=timeout, verify=False)
             if resp.status_code == 200 and "cluster_name" in resp.text:
@@ -402,9 +422,10 @@ class Module(BaseModule):
                 sock.sendall(smb_neg)
                 resp = sock.recv(256)
                 if resp and len(resp) > 39:
-                    flags2 = struct.unpack("<H", resp[22:24])[0] if len(resp) >= 24 else 0
                     # Bit 15 of SecurityMode in SMB response
-                    signing_required = bool(resp[39] & 0x08) if len(resp) > 39 else False
+                    signing_required = (
+                        bool(resp[39] & 0x08) if len(resp) > 39 else False
+                    )
                     if not signing_required:
                         return Finding(
                             title="SMB Signing Not Required",
@@ -438,7 +459,9 @@ class Module(BaseModule):
         except Exception:
             return None
 
-    def _raw_send(self, host: str, port: int, data: bytes, timeout: int) -> Optional[str]:
+    def _raw_send(
+        self, host: str, port: int, data: bytes, timeout: int
+    ) -> Optional[str]:
         try:
             with socket.create_connection((host, port), timeout=timeout) as sock:
                 sock.settimeout(timeout)

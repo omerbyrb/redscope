@@ -1,19 +1,44 @@
 import re
-import copy
-from typing import List, Optional, Dict, Tuple
-from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
+from typing import Dict, List, Optional
+from urllib.parse import parse_qs, urlparse, urlunparse
 
 import requests
 
-from core.base_module import BaseModule, ScanResult, Finding
+from core.base_module import BaseModule, Finding, ScanResult
 
 # Common IDOR-prone parameter names
 IDOR_PARAMS = [
-    "id", "user_id", "userid", "account_id", "accountid", "profile_id",
-    "order_id", "orderid", "invoice_id", "ticket_id", "doc_id", "file_id",
-    "record_id", "customer_id", "member_id", "employee_id", "patient_id",
-    "uid", "pid", "oid", "aid", "rid", "cid", "num", "number", "ref",
-    "uuid", "guid", "token", "key", "hash",
+    "id",
+    "user_id",
+    "userid",
+    "account_id",
+    "accountid",
+    "profile_id",
+    "order_id",
+    "orderid",
+    "invoice_id",
+    "ticket_id",
+    "doc_id",
+    "file_id",
+    "record_id",
+    "customer_id",
+    "member_id",
+    "employee_id",
+    "patient_id",
+    "uid",
+    "pid",
+    "oid",
+    "aid",
+    "rid",
+    "cid",
+    "num",
+    "number",
+    "ref",
+    "uuid",
+    "guid",
+    "token",
+    "key",
+    "hash",
 ]
 
 # Common IDOR-prone API path patterns
@@ -32,9 +57,22 @@ API_PATH_PATTERNS = [
 ]
 
 INTERESTING_FIELDS = [
-    "email", "password", "phone", "address", "ssn", "credit_card",
-    "token", "secret", "api_key", "balance", "role", "admin",
-    "dob", "birth", "salary", "account_number",
+    "email",
+    "password",
+    "phone",
+    "address",
+    "ssn",
+    "credit_card",
+    "token",
+    "secret",
+    "api_key",
+    "balance",
+    "role",
+    "admin",
+    "dob",
+    "birth",
+    "salary",
+    "account_number",
 ]
 
 
@@ -62,7 +100,9 @@ class Module(BaseModule):
         self.log.info("  [1] Testing numeric ID parameter tampering")
         for param, value in existing_params.items():
             if self._is_numeric(value):
-                finding = self._test_id_tampering(session, base_url, existing_params, param, value, timeout)
+                finding = self._test_id_tampering(
+                    session, base_url, existing_params, param, value, timeout
+                )
                 if finding:
                     result.add_finding(finding)
 
@@ -82,7 +122,9 @@ class Module(BaseModule):
         # Test 4: UUID/GUID predictability
         self.log.info("  [4] Checking for sequential/predictable IDs")
         for param, value in existing_params.items():
-            finding = self._test_sequential_ids(session, base_url, existing_params, param, value, timeout)
+            finding = self._test_sequential_ids(
+                session, base_url, existing_params, param, value, timeout
+            )
             if finding:
                 result.add_finding(finding)
 
@@ -97,7 +139,9 @@ class Module(BaseModule):
 
         return result
 
-    def _test_id_tampering(self, session, base_url, all_params, param, value, timeout) -> Optional[Finding]:
+    def _test_id_tampering(
+        self, session, base_url, all_params, param, value, timeout
+    ) -> Optional[Finding]:
         original_id = int(value)
         test_ids = [original_id - 1, original_id + 1, original_id + 100, 1, 2, 9999]
 
@@ -117,10 +161,12 @@ class Module(BaseModule):
                     base_url, params=tampered, timeout=timeout, verify=False
                 )
 
-                if (resp.status_code == 200 and
-                        resp.status_code == orig_resp.status_code and
-                        len(resp.text) > 50 and
-                        resp.text != orig_resp.text):
+                if (
+                    resp.status_code == 200
+                    and resp.status_code == orig_resp.status_code
+                    and len(resp.text) > 50
+                    and resp.text != orig_resp.text
+                ):
 
                     sensitive = self._contains_sensitive_data(resp.text)
                     severity = "high" if sensitive else "medium"
@@ -136,13 +182,21 @@ class Module(BaseModule):
                             f"Changing '{param}' from {original_id} to {test_id} returned "
                             f"a different 200 OK response with content. "
                             f"This may indicate unauthorized access to another user's data."
-                            + (f" Response contains sensitive fields: {sensitive}." if sensitive else "")
+                            + (
+                                f" Response contains sensitive fields: {sensitive}."
+                                if sensitive
+                                else ""
+                            )
                         ),
                         evidence=(
                             f"URL: {base_url}?{param}={test_id}\n"
                             f"Original ID: {original_id} → Status: {orig_resp.status_code}, Size: {len(orig_resp.text)}\n"
                             f"Tampered ID: {test_id} → Status: {resp.status_code}, Size: {len(resp.text)}\n"
-                            + (f"Sensitive fields found: {sensitive}" if sensitive else "")
+                            + (
+                                f"Sensitive fields found: {sensitive}"
+                                if sensitive
+                                else ""
+                            )
                         ),
                         remediation=(
                             "Implement server-side authorization checks on every resource access. "
@@ -155,7 +209,9 @@ class Module(BaseModule):
                 continue
         return None
 
-    def _test_id_injection(self, session, base_url, param, timeout) -> Optional[Finding]:
+    def _test_id_injection(
+        self, session, base_url, param, timeout
+    ) -> Optional[Finding]:
         for test_id in [1, 2, 100]:
             try:
                 resp = session.get(
@@ -164,7 +220,9 @@ class Module(BaseModule):
                 if resp.status_code == 200 and len(resp.text) > 100:
                     sensitive = self._contains_sensitive_data(resp.text)
                     if sensitive:
-                        self.log.info(f"  [yellow]IDOR candidate[/] param={param} id={test_id} sensitive={sensitive}")
+                        self.log.info(
+                            f"  [yellow]IDOR candidate[/] param={param} id={test_id} sensitive={sensitive}"
+                        )
                         return Finding(
                             title=f"Sensitive Data Accessible via '{param}' Parameter",
                             severity="medium",
@@ -193,40 +251,48 @@ class Module(BaseModule):
                 for test_id in [original_id - 1, original_id + 1, 1, 2]:
                     if test_id <= 0:
                         continue
-                    new_path = path[:match.start(1)] + str(test_id) + path[match.end(1):]
+                    new_path = (
+                        path[: match.start(1)] + str(test_id) + path[match.end(1) :]
+                    )
                     new_url = urlunparse(parsed._replace(path=new_path))
                     try:
                         orig = session.get(url, timeout=timeout, verify=False)
                         resp = session.get(new_url, timeout=timeout, verify=False)
-                        if (resp.status_code == 200 and
-                                orig.status_code == 200 and
-                                resp.text != orig.text and
-                                len(resp.text) > 50):
+                        if (
+                            resp.status_code == 200
+                            and orig.status_code == 200
+                            and resp.text != orig.text
+                            and len(resp.text) > 50
+                        ):
                             self.log.info(f"  [bold red]PATH IDOR[/] {new_url}")
-                            findings.append(Finding(
-                                title=f"Path-Based IDOR — {new_path}",
-                                severity="high",
-                                description=(
-                                    f"Modifying the ID in the API path from {original_id} to {test_id} "
-                                    f"returned a different successful response. "
-                                    "This suggests the API does not enforce user-level authorization."
-                                ),
-                                evidence=(
-                                    f"Original: {url} → {orig.status_code} ({len(orig.text)} bytes)\n"
-                                    f"Modified: {new_url} → {resp.status_code} ({len(resp.text)} bytes)"
-                                ),
-                                remediation=(
-                                    "Implement resource ownership checks in the API layer. "
-                                    "Every API endpoint should verify the authenticated user has access to the requested object."
-                                ),
-                                tags=["idor", "api", "broken-access-control"],
-                            ))
+                            findings.append(
+                                Finding(
+                                    title=f"Path-Based IDOR — {new_path}",
+                                    severity="high",
+                                    description=(
+                                        f"Modifying the ID in the API path from {original_id} to {test_id} "
+                                        f"returned a different successful response. "
+                                        "This suggests the API does not enforce user-level authorization."
+                                    ),
+                                    evidence=(
+                                        f"Original: {url} → {orig.status_code} ({len(orig.text)} bytes)\n"
+                                        f"Modified: {new_url} → {resp.status_code} ({len(resp.text)} bytes)"
+                                    ),
+                                    remediation=(
+                                        "Implement resource ownership checks in the API layer. "
+                                        "Every API endpoint should verify the authenticated user has access to the requested object."
+                                    ),
+                                    tags=["idor", "api", "broken-access-control"],
+                                )
+                            )
                             break
                     except requests.RequestException:
                         continue
         return findings
 
-    def _test_sequential_ids(self, session, base_url, all_params, param, value, timeout) -> Optional[Finding]:
+    def _test_sequential_ids(
+        self, session, base_url, all_params, param, value, timeout
+    ) -> Optional[Finding]:
         if not self._is_numeric(value):
             return None
         id_val = int(value)

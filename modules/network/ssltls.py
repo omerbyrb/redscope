@@ -1,15 +1,25 @@
-import ssl
-import socket
 import datetime
-from typing import List, Optional, Tuple
+import socket
+import ssl
+from typing import List, Optional
 
 import requests
 
-from core.base_module import BaseModule, ScanResult, Finding
+from core.base_module import BaseModule, Finding, ScanResult
 
 WEAK_CIPHERS = [
-    "RC4", "DES", "3DES", "MD5", "EXPORT", "NULL", "ANON",
-    "ADH", "AECDH", "PSK", "SRP", "CAMELLIA",
+    "RC4",
+    "DES",
+    "3DES",
+    "MD5",
+    "EXPORT",
+    "NULL",
+    "ANON",
+    "ADH",
+    "AECDH",
+    "PSK",
+    "SRP",
+    "CAMELLIA",
 ]
 
 WEAK_PROTOCOLS = ["SSLv2", "SSLv3", "TLSv1", "TLSv1.1"]
@@ -26,13 +36,20 @@ PROTOCOL_MAP = {
 
 class Module(BaseModule):
     name = "ssltls"
-    description = "SSL/TLS analyzer — certificate validity, weak ciphers, deprecated protocols"
+    description = (
+        "SSL/TLS analyzer — certificate validity, weak ciphers, deprecated protocols"
+    )
     author = "RedScope"
     version = "1.0.0"
 
     def run(self, target: str, **kwargs) -> ScanResult:
         result = ScanResult(module=self.name, target=target)
-        host = target.replace("https://", "").replace("http://", "").split("/")[0].split(":")[0]
+        host = (
+            target.replace("https://", "")
+            .replace("http://", "")
+            .split("/")[0]
+            .split(":")[0]
+        )
         port = 443
 
         self.log.info(f"SSL/TLS analysis on [bold]{host}:{port}[/]")
@@ -66,7 +83,9 @@ class Module(BaseModule):
         if not result.findings:
             self.log.info("[dim]SSL/TLS configuration looks good[/]")
         else:
-            self.log.info(f"SSL/TLS scan complete — [bold red]{len(result.findings)} issues found[/]")
+            self.log.info(
+                f"SSL/TLS scan complete — [bold red]{len(result.findings)} issues found[/]"
+            )
 
         return result
 
@@ -102,55 +121,69 @@ class Module(BaseModule):
         not_before_str = cert.get("not_before", "")
 
         try:
-            not_after = datetime.datetime.strptime(not_after_str, "%b %d %H:%M:%S %Y %Z")
-            not_before = datetime.datetime.strptime(not_before_str, "%b %d %H:%M:%S %Y %Z")
+            not_after = datetime.datetime.strptime(
+                not_after_str, "%b %d %H:%M:%S %Y %Z"
+            )
+            not_before = datetime.datetime.strptime(
+                not_before_str, "%b %d %H:%M:%S %Y %Z"
+            )
 
             days_left = (not_after - now).days
 
-            self.log.info(f"  Cert valid until: [cyan]{not_after_str}[/] ({days_left} days left)")
+            self.log.info(
+                f"  Cert valid until: [cyan]{not_after_str}[/] ({days_left} days left)"
+            )
 
             if now > not_after:
-                findings.append(Finding(
-                    title="SSL Certificate Expired",
-                    severity="critical",
-                    description=f"Certificate expired on {not_after_str}. All connections show security warnings.",
-                    evidence=f"Not After: {not_after_str}",
-                    remediation="Renew the SSL certificate immediately.",
-                    tags=["ssl", "certificate", "expired"],
-                ))
+                findings.append(
+                    Finding(
+                        title="SSL Certificate Expired",
+                        severity="critical",
+                        description=f"Certificate expired on {not_after_str}. All connections show security warnings.",
+                        evidence=f"Not After: {not_after_str}",
+                        remediation="Renew the SSL certificate immediately.",
+                        tags=["ssl", "certificate", "expired"],
+                    )
+                )
             elif days_left < 14:
-                findings.append(Finding(
-                    title=f"SSL Certificate Expiring Soon ({days_left} days)",
-                    severity="high",
-                    description=f"Certificate expires in {days_left} days on {not_after_str}.",
-                    evidence=f"Not After: {not_after_str}",
-                    remediation="Renew the certificate before it expires.",
-                    tags=["ssl", "certificate"],
-                ))
+                findings.append(
+                    Finding(
+                        title=f"SSL Certificate Expiring Soon ({days_left} days)",
+                        severity="high",
+                        description=f"Certificate expires in {days_left} days on {not_after_str}.",
+                        evidence=f"Not After: {not_after_str}",
+                        remediation="Renew the certificate before it expires.",
+                        tags=["ssl", "certificate"],
+                    )
+                )
             elif days_left < 30:
-                findings.append(Finding(
-                    title=f"SSL Certificate Expiring in {days_left} Days",
-                    severity="medium",
-                    description=f"Certificate expires on {not_after_str}.",
-                    evidence=f"Not After: {not_after_str}",
-                    remediation="Plan certificate renewal soon.",
-                    tags=["ssl", "certificate"],
-                ))
+                findings.append(
+                    Finding(
+                        title=f"SSL Certificate Expiring in {days_left} Days",
+                        severity="medium",
+                        description=f"Certificate expires on {not_after_str}.",
+                        evidence=f"Not After: {not_after_str}",
+                        remediation="Plan certificate renewal soon.",
+                        tags=["ssl", "certificate"],
+                    )
+                )
 
             # Validity period > 398 days (Apple/browser policy)
             validity_days = (not_after - not_before).days
             if validity_days > 398:
-                findings.append(Finding(
-                    title="SSL Certificate Validity Period Exceeds 398 Days",
-                    severity="low",
-                    description=(
-                        f"Certificate validity is {validity_days} days. "
-                        "Browsers enforce a maximum of 398 days — older long-lived certs may be distrusted."
-                    ),
-                    evidence=f"Not Before: {not_before_str}\nNot After: {not_after_str}",
-                    remediation="Issue certificates with a maximum validity of 398 days.",
-                    tags=["ssl", "certificate"],
-                ))
+                findings.append(
+                    Finding(
+                        title="SSL Certificate Validity Period Exceeds 398 Days",
+                        severity="low",
+                        description=(
+                            f"Certificate validity is {validity_days} days. "
+                            "Browsers enforce a maximum of 398 days — older long-lived certs may be distrusted."
+                        ),
+                        evidence=f"Not Before: {not_before_str}\nNot After: {not_after_str}",
+                        remediation="Issue certificates with a maximum validity of 398 days.",
+                        tags=["ssl", "certificate"],
+                    )
+                )
         except ValueError:
             pass
 
@@ -158,14 +191,16 @@ class Module(BaseModule):
         cn = cert.get("subject", {}).get("commonName", "")
         san = cert.get("san", [])
         if cn and not self._hostname_matches(host, cn, san):
-            findings.append(Finding(
-                title="SSL Certificate Hostname Mismatch",
-                severity="critical",
-                description=f"Certificate CN/SAN does not match host '{host}'.",
-                evidence=f"CN: {cn}\nSAN: {san}",
-                remediation="Obtain a certificate that includes the correct hostname in its SAN.",
-                tags=["ssl", "certificate", "hostname"],
-            ))
+            findings.append(
+                Finding(
+                    title="SSL Certificate Hostname Mismatch",
+                    severity="critical",
+                    description=f"Certificate CN/SAN does not match host '{host}'.",
+                    evidence=f"CN: {cn}\nSAN: {san}",
+                    remediation="Obtain a certificate that includes the correct hostname in its SAN.",
+                    tags=["ssl", "certificate", "hostname"],
+                )
+            )
 
         return findings
 
@@ -181,18 +216,22 @@ class Module(BaseModule):
                 ctx.maximum_version = PROTOCOL_MAP[proto_name]
                 with socket.create_connection((host, port), timeout=5) as sock:
                     with ctx.wrap_socket(sock, server_hostname=host):
-                        self.log.info(f"  [yellow]Weak protocol supported:[/] {proto_name}")
-                        findings.append(Finding(
-                            title=f"Deprecated Protocol Supported: {proto_name}",
-                            severity="high",
-                            description=(
-                                f"Server supports {proto_name}, which has known vulnerabilities "
-                                "(BEAST, POODLE) and is deprecated by RFC 8996."
-                            ),
-                            evidence=f"Connected successfully using {proto_name}",
-                            remediation=f"Disable {proto_name} and enforce TLS 1.2+ only.",
-                            tags=["ssl", "weak-protocol", proto_name.lower()],
-                        ))
+                        self.log.info(
+                            f"  [yellow]Weak protocol supported:[/] {proto_name}"
+                        )
+                        findings.append(
+                            Finding(
+                                title=f"Deprecated Protocol Supported: {proto_name}",
+                                severity="high",
+                                description=(
+                                    f"Server supports {proto_name}, which has known vulnerabilities "
+                                    "(BEAST, POODLE) and is deprecated by RFC 8996."
+                                ),
+                                evidence=f"Connected successfully using {proto_name}",
+                                remediation=f"Disable {proto_name} and enforce TLS 1.2+ only.",
+                                tags=["ssl", "weak-protocol", proto_name.lower()],
+                            )
+                        )
             except Exception:
                 self.log.info(f"  [green]{proto_name} not supported[/] ✓")
 
@@ -206,7 +245,9 @@ class Module(BaseModule):
             with socket.create_connection((host, port), timeout=5) as sock:
                 with ctx.wrap_socket(sock, server_hostname=host) as ssock:
                     cipher_name, _, bits = ssock.cipher()
-                    self.log.info(f"  Negotiated cipher: [cyan]{cipher_name}[/] ({bits} bits)")
+                    self.log.info(
+                        f"  Negotiated cipher: [cyan]{cipher_name}[/] ({bits} bits)"
+                    )
 
                     for weak in WEAK_CIPHERS:
                         if weak in cipher_name.upper():

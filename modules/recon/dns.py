@@ -1,11 +1,10 @@
 import socket
-import concurrent.futures
-from typing import List, Dict
+from typing import Dict, List
 
 import dns.resolver
 import dns.reversename
 
-from core.base_module import BaseModule, ScanResult, Finding
+from core.base_module import BaseModule, Finding, ScanResult
 
 
 class Module(BaseModule):
@@ -28,7 +27,11 @@ class Module(BaseModule):
                 answers = dns.resolver.resolve(domain, rtype, lifetime=5)
                 records[rtype] = [str(r) for r in answers]
                 self.log.info(f"  [cyan]{rtype}[/]: {records[rtype]}")
-            except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN, dns.exception.Timeout):
+            except (
+                dns.resolver.NoAnswer,
+                dns.resolver.NXDOMAIN,
+                dns.exception.Timeout,
+            ):
                 pass
             except Exception as e:
                 result.add_error(f"{rtype} lookup failed: {e}")
@@ -43,14 +46,16 @@ class Module(BaseModule):
                 axfr = dns.query.xfr(ns, domain, timeout=5)
                 zone_data = list(axfr)
                 if zone_data:
-                    result.add_finding(Finding(
-                        title="DNS Zone Transfer Allowed",
-                        severity="critical",
-                        description=f"Name server {ns} allows zone transfer (AXFR) for {domain}",
-                        evidence="\n".join(str(r) for r in zone_data[:10]),
-                        remediation="Restrict AXFR to authorized secondary name servers only.",
-                        tags=["dns", "axfr", "misconfiguration"],
-                    ))
+                    result.add_finding(
+                        Finding(
+                            title="DNS Zone Transfer Allowed",
+                            severity="critical",
+                            description=f"Name server {ns} allows zone transfer (AXFR) for {domain}",
+                            evidence="\n".join(str(r) for r in zone_data[:10]),
+                            remediation="Restrict AXFR to authorized secondary name servers only.",
+                            tags=["dns", "axfr", "misconfiguration"],
+                        )
+                    )
             except Exception:
                 pass
 
@@ -61,14 +66,16 @@ class Module(BaseModule):
             try:
                 socket.gethostbyname(cname)
             except socket.gaierror:
-                result.add_finding(Finding(
-                    title="Dangling CNAME (Subdomain Takeover Risk)",
-                    severity="high",
-                    description=f"CNAME target {cname} does not resolve — potential subdomain takeover",
-                    evidence=f"CNAME: {domain} → {cname} (unresolved)",
-                    remediation="Remove the dangling CNAME record or point it to a valid host.",
-                    tags=["dns", "subdomain-takeover", "cname"],
-                ))
+                result.add_finding(
+                    Finding(
+                        title="Dangling CNAME (Subdomain Takeover Risk)",
+                        severity="high",
+                        description=f"CNAME target {cname} does not resolve — potential subdomain takeover",
+                        evidence=f"CNAME: {domain} → {cname} (unresolved)",
+                        remediation="Remove the dangling CNAME record or point it to a valid host.",
+                        tags=["dns", "subdomain-takeover", "cname"],
+                    )
+                )
 
         # SPF / DMARC checks
         txt_records = records.get("TXT", [])
@@ -81,20 +88,24 @@ class Module(BaseModule):
             pass
 
         if not has_spf:
-            result.add_finding(Finding(
-                title="Missing SPF Record",
-                severity="medium",
-                description=f"{domain} has no SPF TXT record — email spoofing risk",
-                remediation="Add an SPF record like: v=spf1 include:... ~all",
-                tags=["dns", "email", "spf"],
-            ))
+            result.add_finding(
+                Finding(
+                    title="Missing SPF Record",
+                    severity="medium",
+                    description=f"{domain} has no SPF TXT record — email spoofing risk",
+                    remediation="Add an SPF record like: v=spf1 include:... ~all",
+                    tags=["dns", "email", "spf"],
+                )
+            )
         if not has_dmarc:
-            result.add_finding(Finding(
-                title="Missing DMARC Record",
-                severity="medium",
-                description=f"{domain} has no DMARC policy — phishing risk",
-                remediation="Add a DMARC record at _dmarc.{domain}",
-                tags=["dns", "email", "dmarc"],
-            ))
+            result.add_finding(
+                Finding(
+                    title="Missing DMARC Record",
+                    severity="medium",
+                    description=f"{domain} has no DMARC policy — phishing risk",
+                    remediation="Add a DMARC record at _dmarc.{domain}",
+                    tags=["dns", "email", "dmarc"],
+                )
+            )
 
         return result

@@ -1,16 +1,41 @@
 from typing import List, Optional
-from urllib.parse import urlparse, parse_qs, urlencode
+from urllib.parse import parse_qs, urlparse
 
 import requests
 
-from core.base_module import BaseModule, ScanResult, Finding
+from core.base_module import BaseModule, Finding, ScanResult
 
 REDIRECT_PARAMS = [
-    "redirect", "redirect_uri", "redirect_url", "return", "return_url",
-    "returnTo", "return_to", "next", "next_url", "url", "target",
-    "destination", "dest", "continue", "continue_url", "go", "goto",
-    "out", "view", "to", "link", "forward", "forward_url", "callback",
-    "checkout_url", "success_url", "data", "ref", "ref_url", "redirect_to",
+    "redirect",
+    "redirect_uri",
+    "redirect_url",
+    "return",
+    "return_url",
+    "returnTo",
+    "return_to",
+    "next",
+    "next_url",
+    "url",
+    "target",
+    "destination",
+    "dest",
+    "continue",
+    "continue_url",
+    "go",
+    "goto",
+    "out",
+    "view",
+    "to",
+    "link",
+    "forward",
+    "forward_url",
+    "callback",
+    "checkout_url",
+    "success_url",
+    "data",
+    "ref",
+    "ref_url",
+    "redirect_to",
 ]
 
 # Payloads cover protocol-relative, @ trick, backslash trick, and direct absolute URL
@@ -60,7 +85,9 @@ class Module(BaseModule):
             if finding:
                 result.add_finding(finding)
 
-        self.log.info(f"Open redirect scan complete — {tested} parameters tested, {len(result.findings)} found")
+        self.log.info(
+            f"Open redirect scan complete — {tested} parameters tested, {len(result.findings)} found"
+        )
         return result
 
     def _test_param(self, session, base_url, param, timeout) -> Optional[Finding]:
@@ -77,7 +104,9 @@ class Module(BaseModule):
                 if resp.status_code in (301, 302, 303, 307, 308):
                     location = resp.headers.get("Location", "")
                     if EVIL_HOST in location:
-                        self.log.info(f"  [bold red]OPEN REDIRECT[/] param={param} payload={payload!r}")
+                        self.log.info(
+                            f"  [bold red]OPEN REDIRECT[/] param={param} payload={payload!r}"
+                        )
                         return Finding(
                             title=f"Open Redirect — parameter: {param}",
                             severity="medium",
@@ -101,7 +130,11 @@ class Module(BaseModule):
                 # Also check meta-refresh / JS redirect in body for 200 responses
                 elif resp.status_code == 200 and EVIL_HOST in resp.text:
                     body_lower = resp.text.lower()
-                    if "meta" in body_lower and "refresh" in body_lower and EVIL_HOST in resp.text:
+                    if (
+                        "meta" in body_lower
+                        and "refresh" in body_lower
+                        and EVIL_HOST in resp.text
+                    ):
                         return Finding(
                             title=f"Open Redirect (Meta Refresh) — parameter: {param}",
                             severity="medium",

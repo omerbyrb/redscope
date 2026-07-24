@@ -1,49 +1,61 @@
 import socket
-from typing import List, Optional, Dict, Tuple
+from typing import List, Optional, Tuple
 
 import dns.resolver
 import requests
 
-from core.base_module import BaseModule, ScanResult, Finding
+from core.base_module import BaseModule, Finding, ScanResult
 
 # (service_name, cname_pattern, fingerprint_in_body, severity)
 TAKEOVER_SIGNATURES: List[Tuple[str, str, str, str]] = [
-    ("GitHub Pages",      "github.io",              "There isn't a GitHub Pages site here",      "high"),
-    ("Heroku",            "herokuapp.com",           "No such app",                               "high"),
-    ("Heroku",            "herokudns.com",           "No such app",                               "high"),
-    ("AWS S3",            "s3.amazonaws.com",        "NoSuchBucket",                              "high"),
-    ("AWS S3",            "s3-website",              "NoSuchBucket",                              "high"),
-    ("AWS CloudFront",    "cloudfront.net",          "Bad request",                               "medium"),
-    ("Fastly",            "fastly.net",              "Fastly error: unknown domain",              "high"),
-    ("Pantheon",          "pantheonsite.io",         "The gods are wise",                         "high"),
-    ("Shopify",           "myshopify.com",           "Sorry, this shop is currently unavailable", "high"),
-    ("Tumblr",            "tumblr.com",              "There's nothing here",                      "medium"),
-    ("WP Engine",         "wpengine.com",            "The site you were looking for",             "medium"),
-    ("Ghost",             "ghost.io",                "The thing you were looking for",            "medium"),
-    ("Surge.sh",          "surge.sh",                "project not found",                         "high"),
-    ("Azure",             "azurewebsites.net",       "404 Web Site not found",                    "high"),
-    ("Azure",             "cloudapp.net",            "404 Web Site not found",                    "high"),
-    ("Azure Traffic Mgr", "trafficmanager.net",      "404 Web Site not found",                    "high"),
-    ("Bitbucket",         "bitbucket.io",            "Repository not found",                      "high"),
-    ("Zendesk",           "zendesk.com",             "Help Center Closed",                        "medium"),
-    ("UserVoice",         "uservoice.com",           "This UserVoice subdomain is currently available", "high"),
-    ("Desk.com",          "desk.com",                "Sorry, We Couldn't Find That Page",         "medium"),
-    ("Cargo",             "cargocollective.com",     "404 Not Found",                             "medium"),
-    ("Squarespace",       "squarespace.com",         "No Such Account",                           "medium"),
-    ("Webflow",           "webflow.io",              "The page you are looking for doesn't exist","medium"),
-    ("Netlify",           "netlify.app",             "Not found",                                 "high"),
-    ("DigitalOcean",      "digitalocean.com",        "domain uses DO Spaces",                     "medium"),
-    ("Acquia",            "acquia-sites.com",        "If you are an Acquia Cloud customer",       "medium"),
-    ("HubSpot",           "hs-sites.com",            "does not exist in our system",              "medium"),
-    ("Intercom",          "intercom.help",           "This page is reserved for artistic content","medium"),
-    ("Readme.io",         "readme.io",               "Project doesnt exist",                      "medium"),
-    ("Strikingly",        "strikingly.com",          "page not found",                            "medium"),
+    ("GitHub Pages", "github.io", "There isn't a GitHub Pages site here", "high"),
+    ("Heroku", "herokuapp.com", "No such app", "high"),
+    ("Heroku", "herokudns.com", "No such app", "high"),
+    ("AWS S3", "s3.amazonaws.com", "NoSuchBucket", "high"),
+    ("AWS S3", "s3-website", "NoSuchBucket", "high"),
+    ("AWS CloudFront", "cloudfront.net", "Bad request", "medium"),
+    ("Fastly", "fastly.net", "Fastly error: unknown domain", "high"),
+    ("Pantheon", "pantheonsite.io", "The gods are wise", "high"),
+    ("Shopify", "myshopify.com", "Sorry, this shop is currently unavailable", "high"),
+    ("Tumblr", "tumblr.com", "There's nothing here", "medium"),
+    ("WP Engine", "wpengine.com", "The site you were looking for", "medium"),
+    ("Ghost", "ghost.io", "The thing you were looking for", "medium"),
+    ("Surge.sh", "surge.sh", "project not found", "high"),
+    ("Azure", "azurewebsites.net", "404 Web Site not found", "high"),
+    ("Azure", "cloudapp.net", "404 Web Site not found", "high"),
+    ("Azure Traffic Mgr", "trafficmanager.net", "404 Web Site not found", "high"),
+    ("Bitbucket", "bitbucket.io", "Repository not found", "high"),
+    ("Zendesk", "zendesk.com", "Help Center Closed", "medium"),
+    (
+        "UserVoice",
+        "uservoice.com",
+        "This UserVoice subdomain is currently available",
+        "high",
+    ),
+    ("Desk.com", "desk.com", "Sorry, We Couldn't Find That Page", "medium"),
+    ("Cargo", "cargocollective.com", "404 Not Found", "medium"),
+    ("Squarespace", "squarespace.com", "No Such Account", "medium"),
+    ("Webflow", "webflow.io", "The page you are looking for doesn't exist", "medium"),
+    ("Netlify", "netlify.app", "Not found", "high"),
+    ("DigitalOcean", "digitalocean.com", "domain uses DO Spaces", "medium"),
+    ("Acquia", "acquia-sites.com", "If you are an Acquia Cloud customer", "medium"),
+    ("HubSpot", "hs-sites.com", "does not exist in our system", "medium"),
+    (
+        "Intercom",
+        "intercom.help",
+        "This page is reserved for artistic content",
+        "medium",
+    ),
+    ("Readme.io", "readme.io", "Project doesnt exist", "medium"),
+    ("Strikingly", "strikingly.com", "page not found", "medium"),
 ]
 
 
 class Module(BaseModule):
     name = "takeover"
-    description = "Subdomain takeover detector — dangling CNAMEs and unclaimed cloud services"
+    description = (
+        "Subdomain takeover detector — dangling CNAMEs and unclaimed cloud services"
+    )
     author = "RedScope"
     version = "1.0.0"
 
@@ -54,12 +66,16 @@ class Module(BaseModule):
         subdomains: List[str] = kwargs.get("subdomains", [])
 
         if not subdomains:
-            self.log.info(f"No subdomains provided — enumerating from DNS for [bold]{domain}[/]")
+            self.log.info(
+                f"No subdomains provided — enumerating from DNS for [bold]{domain}[/]"
+            )
             subdomains = self._enumerate_subdomains(domain)
 
         if not subdomains:
             self.log.warning("No subdomains to test — run subdomain module first")
-            result.add_error("No subdomains available. Chain with: --modules subdomain takeover")
+            result.add_error(
+                "No subdomains available. Chain with: --modules subdomain takeover"
+            )
             return result
 
         self.log.info(f"Testing [bold]{len(subdomains)}[/] subdomains for takeover")
@@ -72,7 +88,9 @@ class Module(BaseModule):
         if not result.findings:
             self.log.info("[dim]No subdomain takeover vulnerabilities found[/]")
         else:
-            self.log.info(f"[bold red]{len(result.findings)} takeover vulnerability(ies) found[/]")
+            self.log.info(
+                f"[bold red]{len(result.findings)} takeover vulnerability(ies) found[/]"
+            )
 
         return result
 
@@ -91,7 +109,9 @@ class Module(BaseModule):
         for service, pattern, fingerprint, severity in TAKEOVER_SIGNATURES:
             if pattern.lower() in cname.lower():
                 if not resolves:
-                    self.log.info(f"  [bold red]TAKEOVER[/] {subdomain} → {cname} ({service}) — CNAME does not resolve!")
+                    self.log.info(
+                        f"  [bold red]TAKEOVER[/] {subdomain} → {cname} ({service}) — CNAME does not resolve!"
+                    )
                     return Finding(
                         title=f"Subdomain Takeover — {subdomain} ({service})",
                         severity="critical",
@@ -111,17 +131,26 @@ class Module(BaseModule):
                             f"Remove the dangling CNAME record for '{subdomain}' immediately. "
                             f"If the {service} resource is still needed, re-provision it first, then update DNS."
                         ),
-                        tags=["subdomain-takeover", "cname", "dns", service.lower().replace(" ", "-")],
+                        tags=[
+                            "subdomain-takeover",
+                            "cname",
+                            "dns",
+                            service.lower().replace(" ", "-"),
+                        ],
                     )
 
                 # CNAME resolves — check for fingerprint in body
-                body_finding = self._check_body_fingerprint(subdomain, cname, service, fingerprint, severity)
+                body_finding = self._check_body_fingerprint(
+                    subdomain, cname, service, fingerprint, severity
+                )
                 if body_finding:
                     return body_finding
 
         return None
 
-    def _check_body_fingerprint(self, subdomain, cname, service, fingerprint, severity) -> Optional[Finding]:
+    def _check_body_fingerprint(
+        self, subdomain, cname, service, fingerprint, severity
+    ) -> Optional[Finding]:
         for scheme in ("https", "http"):
             try:
                 resp = requests.get(
@@ -155,7 +184,11 @@ class Module(BaseModule):
                             f"Claim the {service} resource associated with '{cname}', "
                             f"or remove the CNAME DNS record if the service is no longer needed."
                         ),
-                        tags=["subdomain-takeover", "unclaimed", service.lower().replace(" ", "-")],
+                        tags=[
+                            "subdomain-takeover",
+                            "unclaimed",
+                            service.lower().replace(" ", "-"),
+                        ],
                     )
             except requests.RequestException:
                 continue
@@ -176,10 +209,12 @@ class Module(BaseModule):
             return False
 
     def _enumerate_subdomains(self, domain: str) -> List[str]:
-        from modules.recon.subdomain import BUILTIN_WORDLIST
         import concurrent.futures
 
+        from modules.recon.subdomain import BUILTIN_WORDLIST
+
         found = []
+
         def check(word):
             sub = f"{word}.{domain}"
             try:

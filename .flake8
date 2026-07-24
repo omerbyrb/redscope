@@ -1,0 +1,16 @@
+[flake8]
+max-line-length = 120
+exclude = .git,__pycache__,venv,.venv
+per-file-ignores =
+    dashboard/app.py:E501
+    modules/report/html.py:E501
+    modules/network/serviceenum.py:E501
+    modules/network/osfingerprint.py:E501
+    modules/recon/emailsec.py:E501
+    modules/recon/portscan.py:E501
+    modules/web/cors.py:E501
+    modules/web/dirbrute.py:E501
+    modules/web/idor.py:E501,E203
+    modules/web/openredirect.py:E501
+    modules/web/waf.py:E501
+    modules/web/xxe.py:E501

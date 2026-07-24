@@ -2,19 +2,17 @@
 """
 RedScope — Modular Penetration Testing Framework
 """
-import sys
+
 from pathlib import Path
 
 import click
 from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
-from rich import print as rprint
 
+from core.config import CONFIG_PATH, load_config, save_config
 from core.engine import Engine
-from core.config import load_config, save_config, CONFIG_PATH
 from core.logger import log
-from core.plugin_loader import list_modules
 
 console = Console()
 
@@ -42,7 +40,9 @@ def print_banner():
 
 @click.group()
 @click.version_option("1.0.0", prog_name="RedScope")
-@click.option("--config", "-c", type=click.Path(), default=None, help="Path to config file")
+@click.option(
+    "--config", "-c", type=click.Path(), default=None, help="Path to config file"
+)
 @click.option("--output", "-o", default="output", help="Output directory")
 @click.option("--threads", "-t", type=int, default=None, help="Number of threads")
 @click.option("--quiet", "-q", is_flag=True, help="Suppress banner")
@@ -65,12 +65,20 @@ def cli(ctx, config, output, threads, quiet):
 
 @cli.command()
 @click.argument("target")
-@click.option("--modules", "-m", multiple=True, help="Modules to run (can specify multiple)")
+@click.option(
+    "--modules", "-m", multiple=True, help="Modules to run (can specify multiple)"
+)
 @click.option("--all-recon", is_flag=True, help="Run all recon modules")
 @click.option("--all-web", is_flag=True, help="Run all web modules")
 @click.option("--all", "run_all", is_flag=True, help="Run every module")
 @click.option("--save", "-s", is_flag=True, help="Save results to JSON")
-@click.option("--report", "-r", type=click.Choice(["html", "markdown", "json", "all"]), default=None, help="Generate report after scan")
+@click.option(
+    "--report",
+    "-r",
+    type=click.Choice(["html", "markdown", "json", "all"]),
+    default=None,
+    help="Generate report after scan",
+)
 @click.pass_context
 def scan(ctx, target, modules, all_recon, all_web, run_all, save, report):
     """Run one or more modules against a target."""
@@ -79,25 +87,69 @@ def scan(ctx, target, modules, all_recon, all_web, run_all, save, report):
     run_modules = list(modules)
 
     if run_all:
-        run_modules = ["dns", "subdomain", "portscan", "emailsec", "takeover",
-                       "headers", "dirbrute", "sqli", "xss", "cors", "openredirect",
-                       "ssrf", "jwt", "lfi", "cmdi", "xxe", "idor", "waf",
-                       "ssltls", "banner", "cvelookup", "serviceenum", "osfingerprint", "shodan"]
+        run_modules = [
+            "dns",
+            "subdomain",
+            "portscan",
+            "emailsec",
+            "takeover",
+            "headers",
+            "dirbrute",
+            "sqli",
+            "xss",
+            "cors",
+            "openredirect",
+            "ssrf",
+            "jwt",
+            "lfi",
+            "cmdi",
+            "xxe",
+            "idor",
+            "waf",
+            "ssltls",
+            "banner",
+            "cvelookup",
+            "serviceenum",
+            "osfingerprint",
+            "shodan",
+        ]
     if all_recon:
-        run_modules.extend(["dns", "subdomain", "portscan", "emailsec", "takeover", "shodan"])
+        run_modules.extend(
+            ["dns", "subdomain", "portscan", "emailsec", "takeover", "shodan"]
+        )
     if all_web:
-        run_modules.extend(["headers", "dirbrute", "sqli", "xss", "cors",
-                             "openredirect", "ssrf", "jwt", "lfi", "cmdi", "xxe", "idor", "waf"])
+        run_modules.extend(
+            [
+                "headers",
+                "dirbrute",
+                "sqli",
+                "xss",
+                "cors",
+                "openredirect",
+                "ssrf",
+                "jwt",
+                "lfi",
+                "cmdi",
+                "xxe",
+                "idor",
+                "waf",
+            ]
+        )
 
     if not run_modules:
-        log.error("No modules specified. Use --modules, --all-recon, --all-web, or --all")
+        log.error(
+            "No modules specified. Use --modules, --all-recon, --all-web, or --all"
+        )
         raise click.Abort()
 
     for mod in run_modules:
         engine.run_module(mod, target)
 
     if save:
-        out = Path(ctx.obj["output"]) / f"scan_{target.replace('://', '_').replace('/', '_')}.json"
+        out = (
+            Path(ctx.obj["output"])
+            / f"scan_{target.replace('://', '_').replace('/', '_')}.json"
+        )
         engine.save_results(out)
 
     if report in ("html", "all"):
@@ -111,21 +163,33 @@ def scan(ctx, target, modules, all_recon, all_web, run_all, save, report):
 @cli.command("list")
 def list_cmd():
     """List all available modules."""
-    from rich.table import Table
     from rich import box
+    from rich.table import Table
 
     table = Table(title="Available Modules", box=box.ROUNDED)
     table.add_column("Name", style="bold cyan")
     table.add_column("Category")
 
     modules = {
-        "dns": "recon", "subdomain": "recon", "portscan": "recon",
-        "headers": "web", "dirbrute": "web", "sqli": "web", "xss": "web",
-        "banner": "network", "serviceenum": "network",
-        "htmlreport": "report", "jsonreport": "report",
+        "dns": "recon",
+        "subdomain": "recon",
+        "portscan": "recon",
+        "headers": "web",
+        "dirbrute": "web",
+        "sqli": "web",
+        "xss": "web",
+        "banner": "network",
+        "serviceenum": "network",
+        "htmlreport": "report",
+        "jsonreport": "report",
     }
     for name, category in modules.items():
-        color = {"recon": "green", "web": "yellow", "network": "cyan", "report": "blue"}.get(category, "white")
+        color = {
+            "recon": "green",
+            "web": "yellow",
+            "network": "cyan",
+            "report": "blue",
+        }.get(category, "white")
         table.add_row(name, f"[{color}]{category}[/]")
 
     console.print(table)
@@ -156,6 +220,7 @@ def plugin(ctx, plugin_path, target):
 def dashboard(host, port, debug):
     """Launch the RedScope web dashboard."""
     from dashboard.app import run
+
     log.info(f"Starting dashboard at [bold green]http://{host}:{port}[/]")
     run(host=host, port=port, debug=debug)
 

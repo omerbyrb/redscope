@@ -1,9 +1,9 @@
 #!/bin/sh
 set -e
 
-# If first arg is a known CLI command, run it
+# Route CLI commands and flags to the Python CLI
 case "$1" in
-  scan|list|dashboard|init|plugin)
+  scan|list|dashboard|init|plugin|--version|--help|-h)
     exec python cli.py "$@"
     ;;
   *)

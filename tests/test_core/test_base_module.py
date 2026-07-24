@@ -1,4 +1,4 @@
-from core.base_module import Finding, ScanResult, BaseModule
+from core.base_module import BaseModule, Finding, ScanResult
 from core.config import load_config
 
 
@@ -8,11 +8,13 @@ class DummyModule(BaseModule):
 
     def run(self, target: str, **kwargs) -> ScanResult:
         result = ScanResult(module=self.name, target=target)
-        result.add_finding(Finding(
-            title="Test Finding",
-            severity="high",
-            description="A test finding",
-        ))
+        result.add_finding(
+            Finding(
+                title="Test Finding",
+                severity="high",
+                description="A test finding",
+            )
+        )
         return result
 
 
@@ -21,7 +23,13 @@ def _cfg():
 
 
 def test_finding_to_dict():
-    f = Finding(title="XSS", severity="high", description="reflected xss", cvss=7.2, cve="CVE-2023-1234")
+    f = Finding(
+        title="XSS",
+        severity="high",
+        description="reflected xss",
+        cvss=7.2,
+        cve="CVE-2023-1234",
+    )
     d = f.to_dict()
     assert d["title"] == "XSS"
     assert d["severity"] == "high"

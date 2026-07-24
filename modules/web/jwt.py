@@ -1,20 +1,39 @@
 import base64
-import json
-import hmac
 import hashlib
+import hmac
+import json
 import time
 from typing import Optional, Tuple
 
 import requests
 
-from core.base_module import BaseModule, ScanResult, Finding
+from core.base_module import BaseModule, Finding, ScanResult
 
 WEAK_SECRETS = [
-    "secret", "password", "123456", "qwerty", "letmein", "admin",
-    "key", "jwt", "token", "test", "hello", "world", "changeme",
-    "supersecret", "secret123", "password123", "jwt_secret",
-    "your-256-bit-secret", "your-secret-key", "mysecret",
-    "", "null", "undefined", "none",
+    "secret",
+    "password",
+    "123456",
+    "qwerty",
+    "letmein",
+    "admin",
+    "key",
+    "jwt",
+    "token",
+    "test",
+    "hello",
+    "world",
+    "changeme",
+    "supersecret",
+    "secret123",
+    "password123",
+    "jwt_secret",
+    "your-256-bit-secret",
+    "your-secret-key",
+    "mysecret",
+    "",
+    "null",
+    "undefined",
+    "none",
 ]
 
 COMMON_JWT_HEADERS = [
@@ -49,7 +68,9 @@ class Module(BaseModule):
             token = self._harvest_token(session, url, timeout)
 
         if not token:
-            self.log.warning("No JWT found — pass a token via --token or target a login endpoint")
+            self.log.warning(
+                "No JWT found — pass a token via --token or target a login endpoint"
+            )
             result.add_error("No JWT token found or provided")
             return result
 
@@ -135,12 +156,16 @@ class Module(BaseModule):
     def _b64encode(self, data: bytes) -> str:
         return base64.urlsafe_b64encode(data).rstrip(b"=").decode()
 
-    def _check_alg_none(self, header, payload, session, url, timeout) -> Optional[Finding]:
+    def _check_alg_none(
+        self, header, payload, session, url, timeout
+    ) -> Optional[Finding]:
         for none_val in ["none", "None", "NONE", "nOnE"]:
             forged_header = {**header, "alg": none_val}
             forged = (
-                self._b64encode(json.dumps(forged_header).encode()) + "." +
-                self._b64encode(json.dumps(payload).encode()) + "."
+                self._b64encode(json.dumps(forged_header).encode())
+                + "."
+                + self._b64encode(json.dumps(payload).encode())
+                + "."
             )
             try:
                 resp = session.get(
@@ -150,7 +175,9 @@ class Module(BaseModule):
                     verify=False,
                 )
                 if resp.status_code not in (401, 403):
-                    self.log.info(f"  [bold red]alg:none ACCEPTED[/] ({none_val}) → HTTP {resp.status_code}")
+                    self.log.info(
+                        f"  [bold red]alg:none ACCEPTED[/] ({none_val}) → HTTP {resp.status_code}"
+                    )
                     return Finding(
                         title="JWT Algorithm:None Attack Accepted",
                         severity="critical",
@@ -173,12 +200,18 @@ class Module(BaseModule):
                 continue
         return None
 
-    def _check_weak_secret(self, token, header, payload, signature) -> Optional[Finding]:
+    def _check_weak_secret(
+        self, token, header, payload, signature
+    ) -> Optional[Finding]:
         alg = header.get("alg", "")
         if not alg.startswith("HS"):
             return None
 
-        hash_map = {"HS256": hashlib.sha256, "HS384": hashlib.sha384, "HS512": hashlib.sha512}
+        hash_map = {
+            "HS256": hashlib.sha256,
+            "HS384": hashlib.sha384,
+            "HS512": hashlib.sha512,
+        }
         hash_func = hash_map.get(alg, hashlib.sha256)
 
         parts = token.split(".")
@@ -207,7 +240,6 @@ class Module(BaseModule):
 
     def _check_expiry(self, payload) -> Optional[Finding]:
         exp = payload.get("exp")
-        iat = payload.get("iat")
         now = int(time.time())
 
         if not exp:
@@ -234,20 +266,31 @@ class Module(BaseModule):
 
     def _check_sensitive_claims(self, payload) -> list:
         findings = []
-        sensitive_keys = ["password", "passwd", "secret", "key", "token", "credit_card", "ssn", "cvv"]
+        sensitive_keys = [
+            "password",
+            "passwd",
+            "secret",
+            "key",
+            "token",
+            "credit_card",
+            "ssn",
+            "cvv",
+        ]
         for key in payload:
             if any(s in key.lower() for s in sensitive_keys):
-                findings.append(Finding(
-                    title=f"Sensitive Data in JWT Payload: '{key}'",
-                    severity="medium",
-                    description=(
-                        f"JWT payload contains sensitive field '{key}'. "
-                        "JWT payloads are base64-encoded, not encrypted — anyone with the token can read this."
-                    ),
-                    evidence=f"Claim: {key} = {str(payload[key])[:50]}",
-                    remediation="Never store sensitive data in JWT payload. Use opaque session tokens if needed.",
-                    tags=["jwt", "sensitive-data", "information-disclosure"],
-                ))
+                findings.append(
+                    Finding(
+                        title=f"Sensitive Data in JWT Payload: '{key}'",
+                        severity="medium",
+                        description=(
+                            f"JWT payload contains sensitive field '{key}'. "
+                            "JWT payloads are base64-encoded, not encrypted — anyone with the token can read this."
+                        ),
+                        evidence=f"Claim: {key} = {str(payload[key])[:50]}",
+                        remediation="Never store sensitive data in JWT payload. Use opaque session tokens if needed.",
+                        tags=["jwt", "sensitive-data", "information-disclosure"],
+                    )
+                )
         return findings
 
     def _check_alg_confusion(self, header) -> Optional[Finding]:

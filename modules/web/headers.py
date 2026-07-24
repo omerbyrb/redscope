@@ -1,7 +1,6 @@
 import requests
-from urllib.parse import urlparse
 
-from core.base_module import BaseModule, ScanResult, Finding
+from core.base_module import BaseModule, Finding, ScanResult
 
 SECURITY_HEADERS = {
     "Strict-Transport-Security": {
@@ -71,41 +70,53 @@ class Module(BaseModule):
         # Missing security headers
         for header, meta in SECURITY_HEADERS.items():
             if header.lower() not in headers:
-                result.add_finding(Finding(
-                    title=f"Missing {header}",
-                    severity=meta["severity"],
-                    description=meta["description"],
-                    remediation=meta["remediation"],
-                    tags=["headers", "misconfiguration"],
-                ))
+                result.add_finding(
+                    Finding(
+                        title=f"Missing {header}",
+                        severity=meta["severity"],
+                        description=meta["description"],
+                        remediation=meta["remediation"],
+                        tags=["headers", "misconfiguration"],
+                    )
+                )
 
         # Information leakage
         for header in LEAKY_HEADERS:
             if header.lower() in headers:
-                result.add_finding(Finding(
-                    title=f"Information Disclosure via {header}",
-                    severity="info",
-                    description=f"Server exposes technology via {header}: {headers[header.lower()]}",
-                    evidence=f"{header}: {headers[header.lower()]}",
-                    remediation=f"Remove or obfuscate the {header} response header",
-                    tags=["headers", "info-disclosure"],
-                ))
+                result.add_finding(
+                    Finding(
+                        title=f"Information Disclosure via {header}",
+                        severity="info",
+                        description=f"Server exposes technology via {header}: {headers[header.lower()]}",
+                        evidence=f"{header}: {headers[header.lower()]}",
+                        remediation=f"Remove or obfuscate the {header} response header",
+                        tags=["headers", "info-disclosure"],
+                    )
+                )
 
         # HTTPS redirect check
         if target.startswith("http://") or not target.startswith("http"):
             try:
-                http_url = f"http://{target.replace('https://','').replace('http://','')}"
-                http_resp = requests.get(http_url, timeout=5, allow_redirects=False,
-                                         headers={"User-Agent": self.config["general"]["user_agent"]})
+                http_url = (
+                    f"http://{target.replace('https://','').replace('http://','')}"
+                )
+                http_resp = requests.get(
+                    http_url,
+                    timeout=5,
+                    allow_redirects=False,
+                    headers={"User-Agent": self.config["general"]["user_agent"]},
+                )
                 if http_resp.status_code not in (301, 302, 307, 308):
-                    result.add_finding(Finding(
-                        title="HTTP Not Redirected to HTTPS",
-                        severity="high",
-                        description="The site does not redirect HTTP requests to HTTPS",
-                        evidence=f"HTTP {http_url} returned {http_resp.status_code}",
-                        remediation="Configure server to redirect all HTTP traffic to HTTPS (301)",
-                        tags=["tls", "redirect"],
-                    ))
+                    result.add_finding(
+                        Finding(
+                            title="HTTP Not Redirected to HTTPS",
+                            severity="high",
+                            description="The site does not redirect HTTP requests to HTTPS",
+                            evidence=f"HTTP {http_url} returned {http_resp.status_code}",
+                            remediation="Configure server to redirect all HTTP traffic to HTTPS (301)",
+                            tags=["tls", "redirect"],
+                        )
+                    )
             except Exception:
                 pass
 

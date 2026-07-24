@@ -1,14 +1,16 @@
 import logging
-import sys
 from datetime import datetime
 from pathlib import Path
-from rich.logging import RichHandler
+
 from rich.console import Console
+from rich.logging import RichHandler
 
 console = Console()
 
 
-def setup_logger(name: str = "redscope", level: str = "INFO", log_file: bool = False) -> logging.Logger:
+def setup_logger(
+    name: str = "redscope", level: str = "INFO", log_file: bool = False
+) -> logging.Logger:
     logger = logging.getLogger(name)
     logger.setLevel(getattr(logging, level.upper(), logging.INFO))
 

@@ -1,16 +1,15 @@
-import json
 from datetime import datetime
 from pathlib import Path
 from typing import List
 
-from core.base_module import BaseModule, ScanResult, Finding
+from core.base_module import BaseModule, Finding, ScanResult
 
 SEVERITY_COLOR = {
     "critical": "#e74c3c",
-    "high":     "#e67e22",
-    "medium":   "#f1c40f",
-    "low":      "#3498db",
-    "info":     "#95a5a6",
+    "high": "#e67e22",
+    "medium": "#f1c40f",
+    "low": "#3498db",
+    "info": "#95a5a6",
 }
 
 SEVERITY_ORDER = ["critical", "high", "medium", "low", "info"]
@@ -217,17 +216,23 @@ function filterFindings(severity) {{
 
 class Module(BaseModule):
     name = "htmlreport"
-    description = "HTML report generator — single-file, dark theme, interactive findings"
+    description = (
+        "HTML report generator — single-file, dark theme, interactive findings"
+    )
     author = "RedScope"
     version = "1.0.0"
 
     def run(self, target: str, **kwargs) -> ScanResult:
         result = ScanResult(module=self.name, target=target)
         scan_results: List[ScanResult] = kwargs.get("results", [])
-        output_path = Path(kwargs.get("output", f"output/report_{self._safe_name(target)}.html"))
+        output_path = Path(
+            kwargs.get("output", f"output/report_{self._safe_name(target)}.html")
+        )
 
         if not scan_results:
-            self.log.warning("No scan results provided — pass results= to generate report")
+            self.log.warning(
+                "No scan results provided — pass results= to generate report"
+            )
             result.add_error("No results to report")
             return result
 
@@ -239,7 +244,9 @@ class Module(BaseModule):
         result.data["report_path"] = str(output_path)
         return result
 
-    def render_and_save(self, target: str, scan_results: List[ScanResult], output_path: Path) -> Path:
+    def render_and_save(
+        self, target: str, scan_results: List[ScanResult], output_path: Path
+    ) -> Path:
         html = self._render(target, scan_results)
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(html, encoding="utf-8")
@@ -252,9 +259,18 @@ class Module(BaseModule):
             for f in sr.findings:
                 all_findings.append((sr.module, f))
 
-        all_findings.sort(key=lambda x: SEVERITY_ORDER.index(x[1].severity) if x[1].severity in SEVERITY_ORDER else 99)
+        all_findings.sort(
+            key=lambda x: (
+                SEVERITY_ORDER.index(x[1].severity)
+                if x[1].severity in SEVERITY_ORDER
+                else 99
+            )
+        )
 
-        counts = {s: sum(1 for _, f in all_findings if f.severity == s) for s in SEVERITY_ORDER}
+        counts = {
+            s: sum(1 for _, f in all_findings if f.severity == s)
+            for s in SEVERITY_ORDER
+        }
 
         # Group by module
         modules: dict = {}
@@ -295,7 +311,10 @@ class Module(BaseModule):
         if f.cvss:
             sections += f'<div class="finding-section"><div class="cvss"><span class="cvss-score" style="color:{SEVERITY_COLOR.get(f.severity,"#fff")}">{f.cvss}</span><span class="cvss-label">CVSS Score</span></div></div>'
         if f.cve:
-            sections += self._section("CVE", f'<a href="https://nvd.nist.gov/vuln/detail/{f.cve}" target="_blank">{f.cve}</a>')
+            sections += self._section(
+                "CVE",
+                f'<a href="https://nvd.nist.gov/vuln/detail/{f.cve}" target="_blank">{f.cve}</a>',
+            )
         if f.tags:
             tags_html = "".join(f'<span class="tag">{t}</span>' for t in f.tags)
             sections += f'<div class="finding-section"><div class="tags">{tags_html}</div></div>'
@@ -318,4 +337,9 @@ class Module(BaseModule):
 </div>"""
 
     def _safe_name(self, target: str) -> str:
-        return target.replace("https://", "").replace("http://", "").replace("/", "_").replace(":", "_")
+        return (
+            target.replace("https://", "")
+            .replace("http://", "")
+            .replace("/", "_")
+            .replace(":", "_")
+        )
