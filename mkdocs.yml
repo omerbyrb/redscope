@@ -1,0 +1,102 @@
+site_name: RedScope
+site_description: Modular Penetration Testing Framework
+site_author: omerbyrb
+site_url: https://omerbyrb.github.io/redscope
+repo_url: https://github.com/omerbyrb/redscope
+repo_name: omerbyrb/redscope
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    - scheme: slate
+      primary: red
+      accent: deep orange
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+    - scheme: default
+      primary: red
+      accent: deep orange
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.highlight
+    - search.suggest
+    - content.code.copy
+    - content.code.annotate
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: installation.md
+    - Quick Start: quickstart.md
+    - Configuration: configuration.md
+  - Modules:
+    - Overview: modules/index.md
+    - Recon:
+      - DNS Recon: modules/recon/dns.md
+      - Subdomain Enum: modules/recon/subdomain.md
+      - Port Scanner: modules/recon/portscan.md
+      - Subdomain Takeover: modules/recon/takeover.md
+      - Email Security: modules/recon/emailsec.md
+      - Shodan Integration: modules/recon/shodan.md
+    - Web:
+      - HTTP Headers: modules/web/headers.md
+      - Directory Brute Force: modules/web/dirbrute.md
+      - SQL Injection: modules/web/sqli.md
+      - XSS: modules/web/xss.md
+      - CORS: modules/web/cors.md
+      - Open Redirect: modules/web/openredirect.md
+      - SSRF: modules/web/ssrf.md
+      - JWT Analysis: modules/web/jwt.md
+      - WAF Detection: modules/web/waf.md
+      - LFI/RFI: modules/web/lfi.md
+      - Command Injection: modules/web/cmdi.md
+      - XXE: modules/web/xxe.md
+      - IDOR: modules/web/idor.md
+    - Network:
+      - SSL/TLS: modules/network/ssltls.md
+      - Banner Grabbing: modules/network/banner.md
+      - CVE Lookup: modules/network/cvelookup.md
+      - Service Enum: modules/network/serviceenum.md
+      - OS Fingerprint: modules/network/osfingerprint.md
+  - Reporting: reporting.md
+  - Plugin Development: plugins.md
+  - Docker: docker.md
+  - Dashboard: dashboard.md
+  - Legal: legal.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/omerbyrb/redscope
+  analytics:
+    provider: google
+    property: !ENV [GOOGLE_ANALYTICS_ID, '']
