@@ -216,23 +216,17 @@ function filterFindings(severity) {{
 
 class Module(BaseModule):
     name = "htmlreport"
-    description = (
-        "HTML report generator — single-file, dark theme, interactive findings"
-    )
+    description = "HTML report generator — single-file, dark theme, interactive findings"
     author = "RedScope"
     version = "1.0.0"
 
     def run(self, target: str, **kwargs) -> ScanResult:
         result = ScanResult(module=self.name, target=target)
         scan_results: List[ScanResult] = kwargs.get("results", [])
-        output_path = Path(
-            kwargs.get("output", f"output/report_{self._safe_name(target)}.html")
-        )
+        output_path = Path(kwargs.get("output", f"output/report_{self._safe_name(target)}.html"))
 
         if not scan_results:
-            self.log.warning(
-                "No scan results provided — pass results= to generate report"
-            )
+            self.log.warning("No scan results provided — pass results= to generate report")
             result.add_error("No results to report")
             return result
 
@@ -244,9 +238,7 @@ class Module(BaseModule):
         result.data["report_path"] = str(output_path)
         return result
 
-    def render_and_save(
-        self, target: str, scan_results: List[ScanResult], output_path: Path
-    ) -> Path:
+    def render_and_save(self, target: str, scan_results: List[ScanResult], output_path: Path) -> Path:
         html = self._render(target, scan_results)
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(html, encoding="utf-8")
@@ -260,17 +252,10 @@ class Module(BaseModule):
                 all_findings.append((sr.module, f))
 
         all_findings.sort(
-            key=lambda x: (
-                SEVERITY_ORDER.index(x[1].severity)
-                if x[1].severity in SEVERITY_ORDER
-                else 99
-            )
+            key=lambda x: (SEVERITY_ORDER.index(x[1].severity) if x[1].severity in SEVERITY_ORDER else 99)
         )
 
-        counts = {
-            s: sum(1 for _, f in all_findings if f.severity == s)
-            for s in SEVERITY_ORDER
-        }
+        counts = {s: sum(1 for _, f in all_findings if f.severity == s) for s in SEVERITY_ORDER}
 
         # Group by module
         modules: dict = {}
@@ -279,7 +264,9 @@ class Module(BaseModule):
 
         findings_html = ""
         if not all_findings:
-            findings_html = '<div class="empty"><div class="empty-icon">✓</div><p>No findings — target looks clean.</p></div>'
+            findings_html = (
+                '<div class="empty"><div class="empty-icon">✓</div><p>No findings — target looks clean.</p></div>'
+            )
         else:
             for module, findings in modules.items():
                 findings_html += f'<div class="module-group"><div class="module-title">{module}</div>'
@@ -337,9 +324,4 @@ class Module(BaseModule):
 </div>"""
 
     def _safe_name(self, target: str) -> str:
-        return (
-            target.replace("https://", "")
-            .replace("http://", "")
-            .replace("/", "_")
-            .replace(":", "_")
-        )
+        return target.replace("https://", "").replace("http://", "").replace("/", "_").replace(":", "_")

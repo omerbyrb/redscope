@@ -63,20 +63,13 @@ PORTS_TO_PROBE = [22, 80, 443, 8080, 8443, 21, 25, 3389]
 
 class Module(BaseModule):
     name = "osfingerprint"
-    description = (
-        "OS fingerprinting — banner analysis, TTL probing, HTTP header heuristics"
-    )
+    description = "OS fingerprinting — banner analysis, TTL probing, HTTP header heuristics"
     author = "RedScope"
     version = "1.0.0"
 
     def run(self, target: str, **kwargs) -> ScanResult:
         result = ScanResult(module=self.name, target=target)
-        host = (
-            target.replace("https://", "")
-            .replace("http://", "")
-            .split("/")[0]
-            .split(":")[0]
-        )
+        host = target.replace("https://", "").replace("http://", "").split("/")[0].split(":")[0]
         timeout = self.config["general"]["timeout"]
 
         self.log.info(f"OS fingerprinting on [bold]{host}[/]")
@@ -116,16 +109,12 @@ class Module(BaseModule):
         # Pick highest confidence
         best_os = max(candidates, key=candidates.get)
         confidence = candidates[best_os]
-        confidence_label = (
-            "High" if confidence >= 5 else "Medium" if confidence >= 3 else "Low"
-        )
+        confidence_label = "High" if confidence >= 5 else "Medium" if confidence >= 3 else "Low"
 
         result.data["os"] = best_os
         result.data["confidence"] = confidence_label
 
-        self.log.info(
-            f"  [bold green]OS: {best_os}[/] — confidence: {confidence_label} ({confidence} signals)"
-        )
+        self.log.info(f"  [bold green]OS: {best_os}[/] — confidence: {confidence_label} ({confidence} signals)")
 
         result.add_finding(
             Finding(
@@ -135,15 +124,9 @@ class Module(BaseModule):
                     f"Operating system identified as [bold]{best_os}[/] "
                     f"with {confidence_label} confidence ({confidence} independent signals).\n"
                     f"All candidates: "
-                    + ", ".join(
-                        f"{k} ({v})"
-                        for k, v in sorted(candidates.items(), key=lambda x: -x[1])
-                    )
+                    + ", ".join(f"{k} ({v})" for k, v in sorted(candidates.items(), key=lambda x: -x[1]))
                 ),
-                evidence="\n".join(
-                    f"{k}: {v} signals"
-                    for k, v in sorted(candidates.items(), key=lambda x: -x[1])
-                ),
+                evidence="\n".join(f"{k}: {v} signals" for k, v in sorted(candidates.items(), key=lambda x: -x[1])),
                 remediation="Suppress OS-revealing banners (ServerTokens Prod, server_tokens off) to reduce fingerprinting surface.",
                 tags=["osfingerprint", "recon", "info-disclosure"],
             )
@@ -204,9 +187,7 @@ class Module(BaseModule):
 
             flag = "-n" if platform.system().lower() == "windows" else "-c"
             count = "-1" if platform.system().lower() == "windows" else "1"
-            out = subprocess.run(
-                ["ping", flag, count, host], capture_output=True, text=True, timeout=5
-            ).stdout
+            out = subprocess.run(["ping", flag, count, host], capture_output=True, text=True, timeout=5).stdout
 
             ttl_match = re.search(r"ttl[=\s]+(\d+)", out, re.IGNORECASE)
             if ttl_match:

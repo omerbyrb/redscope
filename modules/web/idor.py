@@ -100,9 +100,7 @@ class Module(BaseModule):
         self.log.info("  [1] Testing numeric ID parameter tampering")
         for param, value in existing_params.items():
             if self._is_numeric(value):
-                finding = self._test_id_tampering(
-                    session, base_url, existing_params, param, value, timeout
-                )
+                finding = self._test_id_tampering(session, base_url, existing_params, param, value, timeout)
                 if finding:
                     result.add_finding(finding)
 
@@ -122,9 +120,7 @@ class Module(BaseModule):
         # Test 4: UUID/GUID predictability
         self.log.info("  [4] Checking for sequential/predictable IDs")
         for param, value in existing_params.items():
-            finding = self._test_sequential_ids(
-                session, base_url, existing_params, param, value, timeout
-            )
+            finding = self._test_sequential_ids(session, base_url, existing_params, param, value, timeout)
             if finding:
                 result.add_finding(finding)
 
@@ -139,16 +135,12 @@ class Module(BaseModule):
 
         return result
 
-    def _test_id_tampering(
-        self, session, base_url, all_params, param, value, timeout
-    ) -> Optional[Finding]:
+    def _test_id_tampering(self, session, base_url, all_params, param, value, timeout) -> Optional[Finding]:
         original_id = int(value)
         test_ids = [original_id - 1, original_id + 1, original_id + 100, 1, 2, 9999]
 
         try:
-            orig_resp = session.get(
-                base_url, params=all_params, timeout=timeout, verify=False
-            )
+            orig_resp = session.get(base_url, params=all_params, timeout=timeout, verify=False)
         except requests.RequestException:
             return None
 
@@ -157,9 +149,7 @@ class Module(BaseModule):
                 continue
             tampered = {**all_params, param: str(test_id)}
             try:
-                resp = session.get(
-                    base_url, params=tampered, timeout=timeout, verify=False
-                )
+                resp = session.get(base_url, params=tampered, timeout=timeout, verify=False)
 
                 if (
                     resp.status_code == 200
@@ -182,21 +172,13 @@ class Module(BaseModule):
                             f"Changing '{param}' from {original_id} to {test_id} returned "
                             f"a different 200 OK response with content. "
                             f"This may indicate unauthorized access to another user's data."
-                            + (
-                                f" Response contains sensitive fields: {sensitive}."
-                                if sensitive
-                                else ""
-                            )
+                            + (f" Response contains sensitive fields: {sensitive}." if sensitive else "")
                         ),
                         evidence=(
                             f"URL: {base_url}?{param}={test_id}\n"
                             f"Original ID: {original_id} → Status: {orig_resp.status_code}, Size: {len(orig_resp.text)}\n"
                             f"Tampered ID: {test_id} → Status: {resp.status_code}, Size: {len(resp.text)}\n"
-                            + (
-                                f"Sensitive fields found: {sensitive}"
-                                if sensitive
-                                else ""
-                            )
+                            + (f"Sensitive fields found: {sensitive}" if sensitive else "")
                         ),
                         remediation=(
                             "Implement server-side authorization checks on every resource access. "
@@ -209,20 +191,14 @@ class Module(BaseModule):
                 continue
         return None
 
-    def _test_id_injection(
-        self, session, base_url, param, timeout
-    ) -> Optional[Finding]:
+    def _test_id_injection(self, session, base_url, param, timeout) -> Optional[Finding]:
         for test_id in [1, 2, 100]:
             try:
-                resp = session.get(
-                    base_url, params={param: test_id}, timeout=timeout, verify=False
-                )
+                resp = session.get(base_url, params={param: test_id}, timeout=timeout, verify=False)
                 if resp.status_code == 200 and len(resp.text) > 100:
                     sensitive = self._contains_sensitive_data(resp.text)
                     if sensitive:
-                        self.log.info(
-                            f"  [yellow]IDOR candidate[/] param={param} id={test_id} sensitive={sensitive}"
-                        )
+                        self.log.info(f"  [yellow]IDOR candidate[/] param={param} id={test_id} sensitive={sensitive}")
                         return Finding(
                             title=f"Sensitive Data Accessible via '{param}' Parameter",
                             severity="medium",
@@ -251,9 +227,7 @@ class Module(BaseModule):
                 for test_id in [original_id - 1, original_id + 1, 1, 2]:
                     if test_id <= 0:
                         continue
-                    new_path = (
-                        path[: match.start(1)] + str(test_id) + path[match.end(1) :]
-                    )
+                    new_path = path[: match.start(1)] + str(test_id) + path[match.end(1) :]
                     new_url = urlunparse(parsed._replace(path=new_path))
                     try:
                         orig = session.get(url, timeout=timeout, verify=False)
@@ -290,9 +264,7 @@ class Module(BaseModule):
                         continue
         return findings
 
-    def _test_sequential_ids(
-        self, session, base_url, all_params, param, value, timeout
-    ) -> Optional[Finding]:
+    def _test_sequential_ids(self, session, base_url, all_params, param, value, timeout) -> Optional[Finding]:
         if not self._is_numeric(value):
             return None
         id_val = int(value)

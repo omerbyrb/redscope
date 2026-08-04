@@ -36,20 +36,13 @@ PROTOCOL_MAP = {
 
 class Module(BaseModule):
     name = "ssltls"
-    description = (
-        "SSL/TLS analyzer — certificate validity, weak ciphers, deprecated protocols"
-    )
+    description = "SSL/TLS analyzer — certificate validity, weak ciphers, deprecated protocols"
     author = "RedScope"
     version = "1.0.0"
 
     def run(self, target: str, **kwargs) -> ScanResult:
         result = ScanResult(module=self.name, target=target)
-        host = (
-            target.replace("https://", "")
-            .replace("http://", "")
-            .split("/")[0]
-            .split(":")[0]
-        )
+        host = target.replace("https://", "").replace("http://", "").split("/")[0].split(":")[0]
         port = 443
 
         self.log.info(f"SSL/TLS analysis on [bold]{host}:{port}[/]")
@@ -83,9 +76,7 @@ class Module(BaseModule):
         if not result.findings:
             self.log.info("[dim]SSL/TLS configuration looks good[/]")
         else:
-            self.log.info(
-                f"SSL/TLS scan complete — [bold red]{len(result.findings)} issues found[/]"
-            )
+            self.log.info(f"SSL/TLS scan complete — [bold red]{len(result.findings)} issues found[/]")
 
         return result
 
@@ -121,18 +112,12 @@ class Module(BaseModule):
         not_before_str = cert.get("not_before", "")
 
         try:
-            not_after = datetime.datetime.strptime(
-                not_after_str, "%b %d %H:%M:%S %Y %Z"
-            )
-            not_before = datetime.datetime.strptime(
-                not_before_str, "%b %d %H:%M:%S %Y %Z"
-            )
+            not_after = datetime.datetime.strptime(not_after_str, "%b %d %H:%M:%S %Y %Z")
+            not_before = datetime.datetime.strptime(not_before_str, "%b %d %H:%M:%S %Y %Z")
 
             days_left = (not_after - now).days
 
-            self.log.info(
-                f"  Cert valid until: [cyan]{not_after_str}[/] ({days_left} days left)"
-            )
+            self.log.info(f"  Cert valid until: [cyan]{not_after_str}[/] ({days_left} days left)")
 
             if now > not_after:
                 findings.append(
@@ -216,9 +201,7 @@ class Module(BaseModule):
                 ctx.maximum_version = PROTOCOL_MAP[proto_name]
                 with socket.create_connection((host, port), timeout=5) as sock:
                     with ctx.wrap_socket(sock, server_hostname=host):
-                        self.log.info(
-                            f"  [yellow]Weak protocol supported:[/] {proto_name}"
-                        )
+                        self.log.info(f"  [yellow]Weak protocol supported:[/] {proto_name}")
                         findings.append(
                             Finding(
                                 title=f"Deprecated Protocol Supported: {proto_name}",
@@ -245,9 +228,7 @@ class Module(BaseModule):
             with socket.create_connection((host, port), timeout=5) as sock:
                 with ctx.wrap_socket(sock, server_hostname=host) as ssock:
                     cipher_name, _, bits = ssock.cipher()
-                    self.log.info(
-                        f"  Negotiated cipher: [cyan]{cipher_name}[/] ({bits} bits)"
-                    )
+                    self.log.info(f"  Negotiated cipher: [cyan]{cipher_name}[/] ({bits} bits)")
 
                     for weak in WEAK_CIPHERS:
                         if weak in cipher_name.upper():

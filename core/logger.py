@@ -8,9 +8,7 @@ from rich.logging import RichHandler
 console = Console()
 
 
-def setup_logger(
-    name: str = "redscope", level: str = "INFO", log_file: bool = False
-) -> logging.Logger:
+def setup_logger(name: str = "redscope", level: str = "INFO", log_file: bool = False) -> logging.Logger:
     logger = logging.getLogger(name)
     logger.setLevel(getattr(logging, level.upper(), logging.INFO))
 
@@ -32,9 +30,7 @@ def setup_logger(
         log_dir.mkdir(parents=True, exist_ok=True)
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
         file_handler = logging.FileHandler(log_dir / f"redscope_{ts}.log")
-        file_handler.setFormatter(
-            logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s")
-        )
+        file_handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s"))
         logger.addHandler(file_handler)
 
     return logger

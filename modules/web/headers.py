@@ -97,9 +97,7 @@ class Module(BaseModule):
         # HTTPS redirect check
         if target.startswith("http://") or not target.startswith("http"):
             try:
-                http_url = (
-                    f"http://{target.replace('https://','').replace('http://','')}"
-                )
+                http_url = f"http://{target.replace('https://','').replace('http://','')}"
                 http_resp = requests.get(
                     http_url,
                     timeout=5,

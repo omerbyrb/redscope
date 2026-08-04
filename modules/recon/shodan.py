@@ -49,20 +49,13 @@ RISKY_PORTS = {
 
 class Module(BaseModule):
     name = "shodan"
-    description = (
-        "Shodan integration — IP intelligence, open ports, CVEs, and exposure analysis"
-    )
+    description = "Shodan integration — IP intelligence, open ports, CVEs, and exposure analysis"
     author = "RedScope"
     version = "1.0.0"
 
     def run(self, target: str, **kwargs) -> ScanResult:
         result = ScanResult(module=self.name, target=target)
-        host = (
-            target.replace("https://", "")
-            .replace("http://", "")
-            .split("/")[0]
-            .split(":")[0]
-        )
+        host = target.replace("https://", "").replace("http://", "").split("/")[0].split(":")[0]
 
         api_key = self.config.get("shodan", {}).get("api_key") or kwargs.get("api_key")
 
@@ -81,9 +74,7 @@ class Module(BaseModule):
             if shodan_data:
                 self._process_shodan_data(ip, host, shodan_data, result)
             else:
-                self.log.warning(
-                    "Shodan API returned no data — falling back to DNS history"
-                )
+                self.log.warning("Shodan API returned no data — falling back to DNS history")
         else:
             self.log.warning(
                 "[yellow]No Shodan API key configured.[/]\n"
@@ -114,9 +105,7 @@ class Module(BaseModule):
             self.log.warning(f"  Shodan request failed: {e}")
         return None
 
-    def _process_shodan_data(
-        self, ip: str, host: str, data: Dict, result: ScanResult
-    ) -> None:
+    def _process_shodan_data(self, ip: str, host: str, data: Dict, result: ScanResult) -> None:
         org = data.get("org", "unknown")
         isp = data.get("isp", "unknown")
         country = data.get("country_name", "unknown")
@@ -141,9 +130,7 @@ class Module(BaseModule):
             "tags": tags,
         }
 
-        self.log.info(
-            f"  Org: [cyan]{org}[/] | ISP: {isp} | Location: {city}, {country}"
-        )
+        self.log.info(f"  Org: [cyan]{org}[/] | ISP: {isp} | Location: {city}, {country}")
         self.log.info(f"  Open ports: [cyan]{ports}[/]")
         self.log.info(f"  Hostnames: {hostnames}")
         self.log.info(f"  Shodan tags: {tags}")
@@ -187,11 +174,7 @@ class Module(BaseModule):
         for cve_id, cve_data in vulns.items():
             cvss = cve_data.get("cvss", 0.0) if isinstance(cve_data, dict) else 0.0
             severity = cvss_to_severity(cvss)
-            summary = (
-                cve_data.get("summary", "No description")
-                if isinstance(cve_data, dict)
-                else str(cve_data)
-            )
+            summary = cve_data.get("summary", "No description") if isinstance(cve_data, dict) else str(cve_data)
             self.log.info(f"  [bold red]{cve_id}[/] CVSS:{cvss}")
             result.add_finding(
                 Finding(

@@ -92,9 +92,7 @@ class Module(BaseModule):
                 self.log.info(f"  [dim]No reflection for {param}, skipping[/]")
                 continue
 
-            self.log.info(
-                f"  [yellow]Reflection detected[/] for {param} — fuzzing payloads"
-            )
+            self.log.info(f"  [yellow]Reflection detected[/] for {param} — fuzzing payloads")
 
             finding = self._fuzz_payloads(session, base_url, param, timeout)
             if finding:
@@ -141,9 +139,7 @@ class Module(BaseModule):
                 if payload.lower() in body.lower():
                     for pattern in REFLECTION_PATTERNS:
                         if pattern.search(body):
-                            self.log.info(
-                                f"  [bold red]XSS FOUND[/] param={param} payload={payload!r}"
-                            )
+                            self.log.info(f"  [bold red]XSS FOUND[/] param={param} payload={payload!r}")
                             return Finding(
                                 title=f"Reflected XSS — parameter: {param}",
                                 severity="high",

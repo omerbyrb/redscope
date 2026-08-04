@@ -178,20 +178,13 @@ class Module(BaseModule):
 
     def run(self, target: str, **kwargs) -> ScanResult:
         result = ScanResult(module=self.name, target=target)
-        host = (
-            target.replace("https://", "")
-            .replace("http://", "")
-            .split("/")[0]
-            .split(":")[0]
-        )
+        host = target.replace("https://", "").replace("http://", "").split("/")[0].split(":")[0]
 
         ports = kwargs.get("ports", COMMON_PORTS)
         threads = self.config["general"]["threads"]
         timeout = self.config["general"]["timeout"]
 
-        self.log.info(
-            f"Port scanning [bold]{host}[/] — {len(ports)} ports, {threads} threads"
-        )
+        self.log.info(f"Port scanning [bold]{host}[/] — {len(ports)} ports, {threads} threads")
 
         try:
             ip = socket.gethostbyname(host)
@@ -204,21 +197,14 @@ class Module(BaseModule):
         open_ports: List[Dict] = []
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=threads) as executor:
-            futures = {
-                executor.submit(self._check_port, ip, port, timeout): port
-                for port in ports
-            }
+            futures = {executor.submit(self._check_port, ip, port, timeout): port for port in ports}
             for future in concurrent.futures.as_completed(futures):
                 port_info = future.result()
                 if port_info:
                     open_ports.append(port_info)
                     service = port_info.get("service", "unknown")
-                    banner = (
-                        f" [{port_info['banner']}]" if port_info.get("banner") else ""
-                    )
-                    self.log.info(
-                        f"  [green]OPEN[/] {port_info['port']}/tcp  {service}{banner}"
-                    )
+                    banner = f" [{port_info['banner']}]" if port_info.get("banner") else ""
+                    self.log.info(f"  [green]OPEN[/] {port_info['port']}/tcp  {service}{banner}")
 
         open_ports.sort(key=lambda x: x["port"])
         result.data["open_ports"] = open_ports
@@ -230,8 +216,7 @@ class Module(BaseModule):
                     title=f"{len(open_ports)} Open Ports Found",
                     severity="info",
                     description="\n".join(
-                        f"{p['port']}/tcp  {p.get('service','?')}  {p.get('banner','')}"
-                        for p in open_ports
+                        f"{p['port']}/tcp  {p.get('service','?')}  {p.get('banner','')}" for p in open_ports
                     ),
                     tags=["recon", "portscan"],
                 )
@@ -252,9 +237,7 @@ class Module(BaseModule):
                     )
                 )
 
-        self.log.info(
-            f"Port scan complete — [bold green]{len(open_ports)} open ports[/]"
-        )
+        self.log.info(f"Port scan complete — [bold green]{len(open_ports)} open ports[/]")
         return result
 
     def _check_port(self, ip: str, port: int, timeout: int) -> Optional[Dict]:
@@ -278,11 +261,6 @@ class Module(BaseModule):
                 pass
             else:
                 sock.sendall(b"\r\n")
-            return (
-                sock.recv(256)
-                .decode("utf-8", errors="ignore")
-                .strip()
-                .split("\n")[0][:100]
-            )
+            return sock.recv(256).decode("utf-8", errors="ignore").strip().split("\n")[0][:100]
         except Exception:
             return ""

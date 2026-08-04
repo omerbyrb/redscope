@@ -184,10 +184,7 @@ class Module(BaseModule):
         for path in PROBE_PAYLOADS:
             try:
                 resp = session.get(f"{base}{path}", timeout=timeout, verify=False)
-                blocked = (
-                    resp.status_code in (403, 406, 429, 503)
-                    or self._fingerprint(resp) is not None
-                )
+                blocked = resp.status_code in (403, 406, 429, 503) or self._fingerprint(resp) is not None
                 probe_results.append(
                     {
                         "payload": path,

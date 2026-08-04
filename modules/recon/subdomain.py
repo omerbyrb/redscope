@@ -102,26 +102,17 @@ class Module(BaseModule):
 
         # Load wordlist
         wordlist = self._load_wordlist()
-        self.log.info(
-            f"Testing [cyan]{len(wordlist)}[/] subdomains with {self.config['general']['threads']} threads"
-        )
+        self.log.info(f"Testing [cyan]{len(wordlist)}[/] subdomains with {self.config['general']['threads']} threads")
 
         found: List[dict] = []
 
-        with concurrent.futures.ThreadPoolExecutor(
-            max_workers=self.config["general"]["threads"]
-        ) as executor:
-            futures = {
-                executor.submit(self._resolve, f"{word}.{domain}", wildcard_ips): word
-                for word in wordlist
-            }
+        with concurrent.futures.ThreadPoolExecutor(max_workers=self.config["general"]["threads"]) as executor:
+            futures = {executor.submit(self._resolve, f"{word}.{domain}", wildcard_ips): word for word in wordlist}
             for future in concurrent.futures.as_completed(futures):
                 res = future.result()
                 if res:
                     found.append(res)
-                    self.log.info(
-                        f"  [green]FOUND[/] {res['subdomain']} → {res['ips']}"
-                    )
+                    self.log.info(f"  [green]FOUND[/] {res['subdomain']} → {res['ips']}")
 
         found.sort(key=lambda x: x["subdomain"])
         result.data["subdomains"] = found
@@ -132,9 +123,7 @@ class Module(BaseModule):
                 Finding(
                     title=f"{len(found)} Subdomains Discovered",
                     severity="info",
-                    description="\n".join(
-                        f"{s['subdomain']} → {', '.join(s['ips'])}" for s in found
-                    ),
+                    description="\n".join(f"{s['subdomain']} → {', '.join(s['ips'])}" for s in found),
                     tags=["recon", "subdomain"],
                 )
             )
@@ -193,9 +182,5 @@ class Module(BaseModule):
         wordlist_path = Path(self.config["recon"]["subdomain_wordlist"])
         if wordlist_path.exists():
             with open(wordlist_path) as f:
-                return [
-                    line.strip()
-                    for line in f
-                    if line.strip() and not line.startswith("#")
-                ]
+                return [line.strip() for line in f if line.strip() and not line.startswith("#")]
         return BUILTIN_WORDLIST

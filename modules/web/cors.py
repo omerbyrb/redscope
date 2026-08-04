@@ -14,9 +14,7 @@ TEST_ORIGINS = [
 
 class Module(BaseModule):
     name = "cors"
-    description = (
-        "CORS misconfiguration checker — origin reflection, wildcard, null origin"
-    )
+    description = "CORS misconfiguration checker — origin reflection, wildcard, null origin"
     author = "RedScope"
     version = "1.0.0"
 
@@ -96,9 +94,7 @@ class Module(BaseModule):
             if acao == origin:
                 with_creds = acac == "true"
                 severity = "critical" if with_creds else "high"
-                self.log.info(
-                    f"  [bold red]CORS VULN[/] origin={origin!r} reflected, credentials={with_creds}"
-                )
+                self.log.info(f"  [bold red]CORS VULN[/] origin={origin!r} reflected, credentials={with_creds}")
                 return Finding(
                     title=f"CORS — Arbitrary Origin Reflected{' with Credentials' if with_creds else ''}",
                     severity=severity,

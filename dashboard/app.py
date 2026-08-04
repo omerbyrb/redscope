@@ -81,9 +81,7 @@ def start_scan():
         "counts": {s: 0 for s in SEVERITY_ORDER},
     }
 
-    thread = threading.Thread(
-        target=_run_scan, args=(scan_id, target, modules), daemon=True
-    )
+    thread = threading.Thread(target=_run_scan, args=(scan_id, target, modules), daemon=True)
     thread.start()
 
     return jsonify({"scan_id": scan_id})
@@ -126,9 +124,7 @@ def download_report(scan_id):
     if not engine:
         return jsonify({"error": "Engine not available"}), 500
 
-    safe = (
-        scan["target"].replace("https://", "").replace("http://", "").replace("/", "_")
-    )
+    safe = scan["target"].replace("https://", "").replace("http://", "").replace("/", "_")
     path = Path(f"output/report_{safe}.html")
     engine.generate_html_report(scan["target"], path)
     return send_file(path, as_attachment=True)
@@ -153,12 +149,8 @@ def _run_scan(scan_id: str, target: str, modules: List[str]) -> None:
                     f_dict = finding.to_dict()
                     f_dict["module"] = mod_name
                     scan["findings"].append(f_dict)
-                    scan["counts"][finding.severity] = (
-                        scan["counts"].get(finding.severity, 0) + 1
-                    )
-                scan["log"].append(
-                    f"[{_now()}] {mod_name} done — {len(result.findings)} findings"
-                )
+                    scan["counts"][finding.severity] = scan["counts"].get(finding.severity, 0) + 1
+                scan["log"].append(f"[{_now()}] {mod_name} done — {len(result.findings)} findings")
                 for err in result.errors:
                     scan["errors"].append(f"{mod_name}: {err}")
         except Exception as e:
@@ -166,17 +158,11 @@ def _run_scan(scan_id: str, target: str, modules: List[str]) -> None:
             scan["log"].append(f"[{_now()}] {mod_name} ERROR: {e}")
 
     scan["findings"].sort(
-        key=lambda x: (
-            SEVERITY_ORDER.index(x["severity"])
-            if x["severity"] in SEVERITY_ORDER
-            else 99
-        )
+        key=lambda x: (SEVERITY_ORDER.index(x["severity"]) if x["severity"] in SEVERITY_ORDER else 99)
     )
     scan["status"] = "done"
     scan["finished_at"] = datetime.utcnow().isoformat()
-    scan["log"].append(
-        f"[{_now()}] Scan complete — {len(scan['findings'])} total findings"
-    )
+    scan["log"].append(f"[{_now()}] Scan complete — {len(scan['findings'])} total findings")
 
 
 def _now() -> str:

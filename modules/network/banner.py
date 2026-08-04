@@ -90,12 +90,7 @@ class Module(BaseModule):
 
     def run(self, target: str, **kwargs) -> ScanResult:
         result = ScanResult(module=self.name, target=target)
-        host = (
-            target.replace("https://", "")
-            .replace("http://", "")
-            .split("/")[0]
-            .split(":")[0]
-        )
+        host = target.replace("https://", "").replace("http://", "").split("/")[0].split(":")[0]
 
         ports = kwargs.get("ports", list(SERVICE_PROBES.keys()))
         timeout = self.config["network"]["banner_grab_timeout"]
@@ -144,8 +139,7 @@ class Module(BaseModule):
                     title=f"{len(banners)} Services Fingerprinted",
                     severity="info",
                     description="\n".join(
-                        f"{b['port']}/tcp  {b['service']}  {b['version'] or 'version unknown'}"
-                        for b in banners
+                        f"{b['port']}/tcp  {b['service']}  {b['version'] or 'version unknown'}" for b in banners
                     ),
                     tags=["banner", "recon"],
                 )
@@ -156,9 +150,7 @@ class Module(BaseModule):
         if http_finding:
             result.add_finding(http_finding)
 
-        self.log.info(
-            f"Banner grab complete — [bold green]{len(banners)} services fingerprinted[/]"
-        )
+        self.log.info(f"Banner grab complete — [bold green]{len(banners)} services fingerprinted[/]")
         return result
 
     def _grab(self, host: str, port: int, timeout: int) -> Optional[str]:
@@ -181,9 +173,7 @@ class Module(BaseModule):
                 return groups[0] if groups else m.group(0)
         return None
 
-    def _check_http_version_disclosure(
-        self, host: str, timeout: int
-    ) -> Optional[Finding]:
+    def _check_http_version_disclosure(self, host: str, timeout: int) -> Optional[Finding]:
         disclosures = []
         for scheme in ("https", "http"):
             try:

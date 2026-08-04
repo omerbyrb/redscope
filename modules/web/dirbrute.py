@@ -193,9 +193,7 @@ class Module(BaseModule):
         threads = self.config["general"]["threads"]
         timeout = self.config["general"]["timeout"]
 
-        self.log.info(
-            f"Directory brute force on [bold]{base_url}[/] — {len(wordlist)} paths, {threads} threads"
-        )
+        self.log.info(f"Directory brute force on [bold]{base_url}[/] — {len(wordlist)} paths, {threads} threads")
 
         session = requests.Session()
         session.headers["User-Agent"] = self.config["general"]["user_agent"]
@@ -203,18 +201,13 @@ class Module(BaseModule):
         found: List[dict] = []
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=threads) as executor:
-            futures = {
-                executor.submit(self._probe, session, base_url, path, timeout): path
-                for path in wordlist
-            }
+            futures = {executor.submit(self._probe, session, base_url, path, timeout): path for path in wordlist}
             for future in concurrent.futures.as_completed(futures):
                 res = future.result()
                 if res:
                     found.append(res)
                     color = "green" if res["status"] == 200 else "yellow"
-                    self.log.info(
-                        f"  [{color}]{res['status']}[/]  {res['url']}  ({res['size']} bytes)"
-                    )
+                    self.log.info(f"  [{color}]{res['status']}[/]  {res['url']}  ({res['size']} bytes)")
 
         found.sort(key=lambda x: (x["status"], x["path"]))
         result.data["found"] = found
@@ -235,11 +228,7 @@ class Module(BaseModule):
             status = item["status"]
 
             if path in SENSITIVE_PATHS:
-                severity = (
-                    "critical"
-                    if path in {".env", ".git/config", "credentials.json", "backup.sql"}
-                    else "high"
-                )
+                severity = "critical" if path in {".env", ".git/config", "credentials.json", "backup.sql"} else "high"
                 result.add_finding(
                     Finding(
                         title=f"Sensitive File/Directory Exposed: /{path}",
@@ -276,14 +265,10 @@ class Module(BaseModule):
         self.log.info(f"Dir brute complete — [bold green]{len(found)} paths found[/]")
         return result
 
-    def _probe(
-        self, session: requests.Session, base_url: str, path: str, timeout: int
-    ) -> Optional[dict]:
+    def _probe(self, session: requests.Session, base_url: str, path: str, timeout: int) -> Optional[dict]:
         url = f"{base_url}/{path.lstrip('/')}"
         try:
-            resp = session.get(
-                url, timeout=timeout, allow_redirects=False, verify=False
-            )
+            resp = session.get(url, timeout=timeout, allow_redirects=False, verify=False)
             if resp.status_code in STATUS_INTERESTING:
                 return {
                     "path": path,
@@ -301,9 +286,5 @@ class Module(BaseModule):
         custom = Path("wordlists/directories.txt")
         if custom.exists():
             with open(custom) as f:
-                return [
-                    line.strip()
-                    for line in f
-                    if line.strip() and not line.startswith("#")
-                ]
+                return [line.strip() for line in f if line.strip() and not line.startswith("#")]
         return BUILTIN_WORDLIST

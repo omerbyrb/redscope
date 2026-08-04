@@ -90,9 +90,7 @@ CLOUD_INDICATORS = [
 
 class Module(BaseModule):
     name = "ssrf"
-    description = (
-        "SSRF detector — internal metadata, localhost, and cloud endpoint probing"
-    )
+    description = "SSRF detector — internal metadata, localhost, and cloud endpoint probing"
     author = "RedScope"
     version = "1.0.0"
 
@@ -110,25 +108,19 @@ class Module(BaseModule):
         base_url = url.split("?")[0] if existing_params else url
         params_to_test = set(existing_params) | set(SSRF_PARAMS)
 
-        self.log.info(
-            f"  Testing {len(params_to_test)} params × {len(INTERNAL_TARGETS)} targets"
-        )
+        self.log.info(f"  Testing {len(params_to_test)} params × {len(INTERNAL_TARGETS)} targets")
 
         for param in params_to_test:
             # Test internal/cloud metadata targets
             for ssrf_url, label in INTERNAL_TARGETS:
-                finding = self._probe(
-                    session, base_url, param, ssrf_url, label, timeout
-                )
+                finding = self._probe(session, base_url, param, ssrf_url, label, timeout)
                 if finding:
                     result.add_finding(finding)
                     break  # One confirmed finding per param is enough
 
             # Test bypass payloads
             for payload in BYPASS_PAYLOADS:
-                finding = self._probe(
-                    session, base_url, param, payload, "Localhost bypass", timeout
-                )
+                finding = self._probe(session, base_url, param, payload, "Localhost bypass", timeout)
                 if finding:
                     result.add_finding(finding)
                     break
@@ -138,9 +130,7 @@ class Module(BaseModule):
 
         return result
 
-    def _probe(
-        self, session, base_url, param, ssrf_url, label, timeout
-    ) -> Optional[Finding]:
+    def _probe(self, session, base_url, param, ssrf_url, label, timeout) -> Optional[Finding]:
         try:
             resp = session.get(
                 base_url,
@@ -155,9 +145,7 @@ class Module(BaseModule):
             # Check for cloud metadata indicators in response
             for indicator in CLOUD_INDICATORS:
                 if indicator.lower() in body.lower():
-                    self.log.info(
-                        f"  [bold red]SSRF CONFIRMED[/] param={param} target={label}"
-                    )
+                    self.log.info(f"  [bold red]SSRF CONFIRMED[/] param={param} target={label}")
                     return Finding(
                         title=f"SSRF — Cloud Metadata Accessible via '{param}'",
                         severity="critical",
@@ -183,16 +171,8 @@ class Module(BaseModule):
                     )
 
             # Heuristic: unusually fast response to internal target = may have connected
-            if (
-                resp.elapsed.total_seconds() < 0.3
-                and resp.status_code == 200
-                and len(body) > 10
-            ):
-                if (
-                    "127.0.0.1" in ssrf_url
-                    or "localhost" in ssrf_url
-                    or "169.254" in ssrf_url
-                ):
+            if resp.elapsed.total_seconds() < 0.3 and resp.status_code == 200 and len(body) > 10:
+                if "127.0.0.1" in ssrf_url or "localhost" in ssrf_url or "169.254" in ssrf_url:
                     self.log.info(
                         f"  [yellow]SSRF POSSIBLE[/] param={param} target={label} (fast response, non-empty body)"
                     )

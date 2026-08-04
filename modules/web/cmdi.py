@@ -81,9 +81,7 @@ TIME_THRESHOLD = 4.0  # seconds above baseline to confirm time-based
 
 class Module(BaseModule):
     name = "cmdi"
-    description = (
-        "Command injection scanner — output-based and time-based blind detection"
-    )
+    description = "Command injection scanner — output-based and time-based blind detection"
     author = "RedScope"
     version = "1.0.0"
 
@@ -125,16 +123,12 @@ class Module(BaseModule):
 
     def _baseline(self, session, base_url, param, timeout) -> float:
         try:
-            resp = session.get(
-                base_url, params={param: "1"}, timeout=timeout, verify=False
-            )
+            resp = session.get(base_url, params={param: "1"}, timeout=timeout, verify=False)
             return resp.elapsed.total_seconds()
         except Exception:
             return 1.0
 
-    def _test_output_based(
-        self, session, base_url, param, timeout
-    ) -> Optional[Finding]:
+    def _test_output_based(self, session, base_url, param, timeout) -> Optional[Finding]:
         for payload, pattern, technique in DETECTION_PAYLOADS:
             if pattern is None:
                 continue
@@ -178,9 +172,7 @@ class Module(BaseModule):
                 continue
         return None
 
-    def _test_time_based(
-        self, session, base_url, param, timeout, baseline: float
-    ) -> Optional[Finding]:
+    def _test_time_based(self, session, base_url, param, timeout, baseline: float) -> Optional[Finding]:
         for payload, pattern, technique in DETECTION_PAYLOADS:
             if pattern is not None:
                 continue

@@ -280,9 +280,7 @@ KNOWN_CVES = [
 
 class Module(BaseModule):
     name = "cvelookup"
-    description = (
-        "CVE lookup — match detected software versions against known vulnerabilities"
-    )
+    description = "CVE lookup — match detected software versions against known vulnerabilities"
     author = "RedScope"
     version = "1.0.0"
 
@@ -338,9 +336,7 @@ class Module(BaseModule):
 
             for hit in all_hits:
                 total_cves += 1
-                self.log.info(
-                    f"    [bold red]{hit['cve_id']}[/] CVSS:{hit['cvss']} — {hit['description'][:60]}"
-                )
+                self.log.info(f"    [bold red]{hit['cve_id']}[/] CVSS:{hit['cvss']} — {hit['description'][:60]}")
                 result.add_finding(
                     Finding(
                         title=f"{hit['cve_id']} — {name} {version}",
@@ -398,11 +394,7 @@ class Module(BaseModule):
                 cve = vuln.get("cve", {})
                 cve_id = cve.get("id", "")
                 desc = next(
-                    (
-                        d["value"]
-                        for d in cve.get("descriptions", [])
-                        if d["lang"] == "en"
-                    ),
+                    (d["value"] for d in cve.get("descriptions", []) if d["lang"] == "en"),
                     "No description available",
                 )
                 metrics = cve.get("metrics", {})
@@ -413,11 +405,7 @@ class Module(BaseModule):
                         cvss_data = metrics[key][0].get("cvssData", {})
                         cvss = cvss_data.get("baseScore", 0.0)
                         sev = cvss_data.get("baseSeverity", "").lower()
-                        severity = (
-                            sev
-                            if sev in ("critical", "high", "medium", "low")
-                            else "info"
-                        )
+                        severity = sev if sev in ("critical", "high", "medium", "low") else "info"
                         break
 
                 if cvss >= 5.0:

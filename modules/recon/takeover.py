@@ -53,9 +53,7 @@ TAKEOVER_SIGNATURES: List[Tuple[str, str, str, str]] = [
 
 class Module(BaseModule):
     name = "takeover"
-    description = (
-        "Subdomain takeover detector — dangling CNAMEs and unclaimed cloud services"
-    )
+    description = "Subdomain takeover detector — dangling CNAMEs and unclaimed cloud services"
     author = "RedScope"
     version = "1.0.0"
 
@@ -66,16 +64,12 @@ class Module(BaseModule):
         subdomains: List[str] = kwargs.get("subdomains", [])
 
         if not subdomains:
-            self.log.info(
-                f"No subdomains provided — enumerating from DNS for [bold]{domain}[/]"
-            )
+            self.log.info(f"No subdomains provided — enumerating from DNS for [bold]{domain}[/]")
             subdomains = self._enumerate_subdomains(domain)
 
         if not subdomains:
             self.log.warning("No subdomains to test — run subdomain module first")
-            result.add_error(
-                "No subdomains available. Chain with: --modules subdomain takeover"
-            )
+            result.add_error("No subdomains available. Chain with: --modules subdomain takeover")
             return result
 
         self.log.info(f"Testing [bold]{len(subdomains)}[/] subdomains for takeover")
@@ -88,9 +82,7 @@ class Module(BaseModule):
         if not result.findings:
             self.log.info("[dim]No subdomain takeover vulnerabilities found[/]")
         else:
-            self.log.info(
-                f"[bold red]{len(result.findings)} takeover vulnerability(ies) found[/]"
-            )
+            self.log.info(f"[bold red]{len(result.findings)} takeover vulnerability(ies) found[/]")
 
         return result
 
@@ -140,17 +132,13 @@ class Module(BaseModule):
                     )
 
                 # CNAME resolves — check for fingerprint in body
-                body_finding = self._check_body_fingerprint(
-                    subdomain, cname, service, fingerprint, severity
-                )
+                body_finding = self._check_body_fingerprint(subdomain, cname, service, fingerprint, severity)
                 if body_finding:
                     return body_finding
 
         return None
 
-    def _check_body_fingerprint(
-        self, subdomain, cname, service, fingerprint, severity
-    ) -> Optional[Finding]:
+    def _check_body_fingerprint(self, subdomain, cname, service, fingerprint, severity) -> Optional[Finding]:
         for scheme in ("https", "http"):
             try:
                 resp = requests.get(

@@ -96,9 +96,7 @@ RFI_INDICATOR = "evil-redscope-test.com"
 
 class Module(BaseModule):
     name = "lfi"
-    description = (
-        "LFI/RFI scanner — path traversal, PHP wrapper, and remote file inclusion"
-    )
+    description = "LFI/RFI scanner — path traversal, PHP wrapper, and remote file inclusion"
     author = "RedScope"
     version = "1.0.0"
 
@@ -116,9 +114,7 @@ class Module(BaseModule):
         base_url = url.split("?")[0] if existing_params else url
         params_to_test = list(set(existing_params) | set(LFI_PARAMS))
 
-        self.log.info(
-            f"  Testing {len(params_to_test)} params × {len(LFI_PAYLOADS)} LFI payloads"
-        )
+        self.log.info(f"  Testing {len(params_to_test)} params × {len(LFI_PAYLOADS)} LFI payloads")
 
         for param in params_to_test:
             # LFI
@@ -155,11 +151,7 @@ class Module(BaseModule):
                             f"  [bold red]LFI CONFIRMED[/] param={param} payload={payload!r} indicator={label}"
                         )
                         severity = (
-                            "critical"
-                            if "passwd" in label
-                            or "shadow" in label
-                            or "environ" in label
-                            else "high"
+                            "critical" if "passwd" in label or "shadow" in label or "environ" in label else "high"
                         )
                         return Finding(
                             title=f"Local File Inclusion — parameter: {param}",
@@ -199,9 +191,7 @@ class Module(BaseModule):
                 if RFI_INDICATOR in resp.text or resp.status_code in (200, 500):
                     # Heuristic: if the external domain appears in response, RFI may be happening
                     if RFI_INDICATOR in resp.text:
-                        self.log.info(
-                            f"  [bold red]RFI POSSIBLE[/] param={param} payload={payload!r}"
-                        )
+                        self.log.info(f"  [bold red]RFI POSSIBLE[/] param={param} payload={payload!r}")
                         return Finding(
                             title=f"Remote File Inclusion — parameter: {param}",
                             severity="critical",
@@ -211,8 +201,7 @@ class Module(BaseModule):
                                 "the server attempted to fetch and include the remote URL."
                             ),
                             evidence=(
-                                f"URL: {base_url}?{param}={payload}\n"
-                                f"External domain found in response body."
+                                f"URL: {base_url}?{param}={payload}\n" f"External domain found in response body."
                             ),
                             remediation=(
                                 "Disable allow_url_include in PHP (php.ini). "

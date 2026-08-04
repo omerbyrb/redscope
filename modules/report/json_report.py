@@ -24,12 +24,7 @@ class Module(BaseModule):
             result.add_error("No results to report")
             return result
 
-        safe = (
-            target.replace("https://", "")
-            .replace("http://", "")
-            .replace("/", "_")
-            .replace(":", "_")
-        )
+        safe = target.replace("https://", "").replace("http://", "").replace("/", "_").replace(":", "_")
 
         if fmt in ("json", "both"):
             path = output_dir / f"report_{safe}.json"
@@ -45,9 +40,7 @@ class Module(BaseModule):
 
     # ── JSON ─────────────────────────────────────────────────────────────────
 
-    def save_json(
-        self, target: str, scan_results: List[ScanResult], path: Path
-    ) -> Path:
+    def save_json(self, target: str, scan_results: List[ScanResult], path: Path) -> Path:
         path.parent.mkdir(parents=True, exist_ok=True)
 
         all_findings = []
@@ -56,17 +49,10 @@ class Module(BaseModule):
                 all_findings.append(f.to_dict() | {"module": sr.module})
 
         all_findings.sort(
-            key=lambda x: (
-                SEVERITY_ORDER.index(x["severity"])
-                if x["severity"] in SEVERITY_ORDER
-                else 99
-            )
+            key=lambda x: (SEVERITY_ORDER.index(x["severity"]) if x["severity"] in SEVERITY_ORDER else 99)
         )
 
-        counts = {
-            s: sum(1 for f in all_findings if f["severity"] == s)
-            for s in SEVERITY_ORDER
-        }
+        counts = {s: sum(1 for f in all_findings if f["severity"] == s) for s in SEVERITY_ORDER}
 
         report = {
             "meta": {
@@ -89,9 +75,7 @@ class Module(BaseModule):
 
     # ── Markdown ──────────────────────────────────────────────────────────────
 
-    def save_markdown(
-        self, target: str, scan_results: List[ScanResult], path: Path
-    ) -> Path:
+    def save_markdown(self, target: str, scan_results: List[ScanResult], path: Path) -> Path:
         path.parent.mkdir(parents=True, exist_ok=True)
 
         all_findings = []
@@ -100,17 +84,10 @@ class Module(BaseModule):
                 all_findings.append((sr.module, f))
 
         all_findings.sort(
-            key=lambda x: (
-                SEVERITY_ORDER.index(x[1].severity)
-                if x[1].severity in SEVERITY_ORDER
-                else 99
-            )
+            key=lambda x: (SEVERITY_ORDER.index(x[1].severity) if x[1].severity in SEVERITY_ORDER else 99)
         )
 
-        counts = {
-            s: sum(1 for _, f in all_findings if f.severity == s)
-            for s in SEVERITY_ORDER
-        }
+        counts = {s: sum(1 for _, f in all_findings if f.severity == s) for s in SEVERITY_ORDER}
 
         ICONS = {
             "critical": "🔴",
@@ -155,11 +132,7 @@ class Module(BaseModule):
                     "",
                     f"**Severity:** `{f.severity.upper()}`"
                     + (f" | **CVSS:** `{f.cvss}`" if f.cvss else "")
-                    + (
-                        f" | **CVE:** [{f.cve}](https://nvd.nist.gov/vuln/detail/{f.cve})"
-                        if f.cve
-                        else ""
-                    ),
+                    + (f" | **CVE:** [{f.cve}](https://nvd.nist.gov/vuln/detail/{f.cve})" if f.cve else ""),
                     "",
                 ]
                 if f.description:

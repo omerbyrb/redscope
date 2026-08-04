@@ -68,9 +68,7 @@ class Module(BaseModule):
             token = self._harvest_token(session, url, timeout)
 
         if not token:
-            self.log.warning(
-                "No JWT found — pass a token via --token or target a login endpoint"
-            )
+            self.log.warning("No JWT found — pass a token via --token or target a login endpoint")
             result.add_error("No JWT token found or provided")
             return result
 
@@ -156,9 +154,7 @@ class Module(BaseModule):
     def _b64encode(self, data: bytes) -> str:
         return base64.urlsafe_b64encode(data).rstrip(b"=").decode()
 
-    def _check_alg_none(
-        self, header, payload, session, url, timeout
-    ) -> Optional[Finding]:
+    def _check_alg_none(self, header, payload, session, url, timeout) -> Optional[Finding]:
         for none_val in ["none", "None", "NONE", "nOnE"]:
             forged_header = {**header, "alg": none_val}
             forged = (
@@ -175,9 +171,7 @@ class Module(BaseModule):
                     verify=False,
                 )
                 if resp.status_code not in (401, 403):
-                    self.log.info(
-                        f"  [bold red]alg:none ACCEPTED[/] ({none_val}) → HTTP {resp.status_code}"
-                    )
+                    self.log.info(f"  [bold red]alg:none ACCEPTED[/] ({none_val}) → HTTP {resp.status_code}")
                     return Finding(
                         title="JWT Algorithm:None Attack Accepted",
                         severity="critical",
@@ -186,10 +180,7 @@ class Module(BaseModule):
                             "This means the server does not validate the signature, "
                             "allowing anyone to forge arbitrary tokens."
                         ),
-                        evidence=(
-                            f"Forged token: {forged[:80]}...\n"
-                            f"Server response: HTTP {resp.status_code}"
-                        ),
+                        evidence=(f"Forged token: {forged[:80]}...\n" f"Server response: HTTP {resp.status_code}"),
                         remediation=(
                             "Explicitly reject tokens with alg=none. "
                             "Use a JWT library that enforces a strict algorithm allowlist."
@@ -200,9 +191,7 @@ class Module(BaseModule):
                 continue
         return None
 
-    def _check_weak_secret(
-        self, token, header, payload, signature
-    ) -> Optional[Finding]:
+    def _check_weak_secret(self, token, header, payload, signature) -> Optional[Finding]:
         alg = header.get("alg", "")
         if not alg.startswith("HS"):
             return None

