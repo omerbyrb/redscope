@@ -1,7 +1,5 @@
 # RedScope 🔴
 
-> Modular Penetration Testing Framework — built for security professionals
-
 ```
 ██████╗ ███████╗██████╗ ███████╗ ██████╗ ██████╗ ██████╗ ███████╗
 ██╔══██╗██╔════╝██╔══██╗██╔════╝██╔════╝██╔═══██╗██╔══██╗██╔════╝
@@ -11,42 +9,53 @@
 ╚═╝  ╚═╝╚══════╝╚═════╝ ╚══════╝ ╚═════╝ ╚═════╝ ╚═╝     ╚══════╝
 ```
 
-**RedScope** is an open-source, modular penetration testing framework designed to automate reconnaissance, vulnerability scanning, and reporting — all from a single CLI.
+**Modular Penetration Testing Framework**
+
+[![CI](https://github.com/omerbyrb/redscope/actions/workflows/ci.yml/badge.svg)](https://github.com/omerbyrb/redscope/actions/workflows/ci.yml)
+[![Docs](https://github.com/omerbyrb/redscope/actions/workflows/docs.yml/badge.svg)](https://omerbyrb.github.io/redscope)
+[![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)](https://www.python.org/)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Security](https://img.shields.io/badge/security-pip--audit-orange)](https://github.com/pypa/pip-audit)
 
 > ⚠️ **Legal Notice:** Only use RedScope on systems you own or have explicit written authorization to test. Unauthorized scanning is illegal.
 
 ---
 
+**RedScope** is an open-source, modular penetration testing framework that automates reconnaissance, vulnerability scanning, and reporting — all from a single CLI.
+
+📖 **[Full Documentation →](https://omerbyrb.github.io/redscope)**
+
+---
+
 ## Features
 
-- **Modular architecture** — plug in your own modules with a single Python class
-- **Rich CLI output** — color-coded findings by severity
+- **24 built-in modules** — recon, web, and network categories
+- **Modular plugin system** — drop a `.py` file in `/plugins` and run it instantly
+- **Rich CLI output** — color-coded findings ranked by severity
 - **Multi-threaded** — fast scanning with configurable thread pools
-- **Plugin system** — drop a `.py` file in `/plugins` and run it instantly
-- **Structured output** — JSON, HTML, and Markdown reports
+- **3 report formats** — self-contained HTML (dark theme), JSON, Markdown
+- **Web dashboard** — Flask-based UI with real-time scan monitoring
+- **Docker ready** — single image with nmap, dnsutils, netcat included
+- **CI/CD** — GitHub Actions with lint, test matrix, Docker build, security audit
 
 ## Installation
 
-### Local
 ```bash
 git clone https://github.com/omerbyrb/redscope
 cd redscope
 pip install -r requirements.txt
 ```
 
-### Docker
+Or install as a package:
 ```bash
-# Build
+pip install -e .
+```
+
+### Docker
+
+```bash
 docker build -t redscope .
-
-# Run a scan
-docker run --rm -v $(pwd)/output:/app/output redscope scan example.com --modules dns headers --report html
-
-# Launch web dashboard
-docker run --rm -p 5000:5000 -v $(pwd)/output:/app/output redscope dashboard --host 0.0.0.0
-
-# Using docker-compose (dashboard)
-docker compose --profile dashboard up -d
+docker run --rm redscope --version
 ```
 
 ## Quick Start
@@ -55,36 +64,67 @@ docker compose --profile dashboard up -d
 # List all modules
 python cli.py list
 
-# DNS reconnaissance
+# DNS recon
 python cli.py scan example.com --modules dns
 
-# HTTP security header analysis
+# HTTP security headers
 python cli.py scan https://example.com --modules headers
 
 # Full recon sweep
 python cli.py scan example.com --all-recon --save
 
-# Full web assessment
-python cli.py scan https://example.com --all-web --save
+# Full web assessment with HTML report
+python cli.py scan https://example.com --all-web --report html
+
+# Everything
+python cli.py scan https://example.com --all --save --report html
 ```
 
 ## Modules
 
-| Module | Category | Description |
-|--------|----------|-------------|
-| `dns` | Recon | DNS records, zone transfer, SPF/DMARC |
-| `subdomain` | Recon | Subdomain enumeration via wordlist + APIs |
-| `portscan` | Recon | TCP/UDP port scanning with service detection |
-| `headers` | Web | HTTP security header analysis |
-| `dirbrute` | Web | Directory & file brute forcing |
-| `sqli` | Web | SQL injection detection |
-| `xss` | Web | Cross-site scripting detection |
-| `banner` | Network | Service banner grabbing |
+### Recon
+
+| Module | Description |
+|--------|-------------|
+| `dns` | DNS records, zone transfer, dangling CNAMEs, SPF/DMARC |
+| `subdomain` | Wordlist subdomain enumeration with wildcard detection |
+| `portscan` | TCP port scan with banner grabbing (40+ ports) |
+| `takeover` | Subdomain takeover detection (29 cloud services) |
+| `emailsec` | SPF, DMARC, DKIM (24 selectors), MTA-STS, BIMI |
+| `shodan` | Shodan / InternetDB intelligence — open ports, CVEs, tags |
+
+### Web
+
+| Module | Description |
+|--------|-------------|
+| `headers` | HTTP security header analysis (6 headers + info leakage) |
+| `dirbrute` | Directory/file brute force (100+ paths, multi-threaded) |
+| `sqli` | SQL injection — error-based + time-based blind |
+| `xss` | Reflected XSS with CSP audit |
+| `cors` | CORS misconfiguration — wildcard, origin reflection, null origin |
+| `openredirect` | Open redirect (28 params, 12 bypass payloads) |
+| `ssrf` | SSRF — AWS/GCP/Azure metadata + bypass payloads |
+| `jwt` | JWT analysis — weak secrets, alg:none, expiry, sensitive claims |
+| `waf` | WAF fingerprinting (14 WAFs) |
+| `lfi` | Local/Remote File Inclusion (28 LFI + 4 RFI payloads) |
+| `cmdi` | Command injection — output-based + time-based (Unix + Windows) |
+| `xxe` | XXE injection (8 payloads, 5 content types) |
+| `idor` | IDOR — numeric ID, param injection, path IDOR, sequential |
+
+### Network
+
+| Module | Description |
+|--------|-------------|
+| `ssltls` | Certificate expiry/validity, weak protocols, weak ciphers, HSTS |
+| `banner` | Service banner grabbing + version detection (25 ports) |
+| `cvelookup` | CVE lookup — NVD API + 35-entry local knowledge base |
+| `serviceenum` | Service enum — FTP anon, SSH algos, SMTP relay, Redis/Mongo no-auth |
+| `osfingerprint` | OS detection via TTL, banners, HTTP headers (18 OS signatures) |
 
 ## Writing a Plugin
 
 ```python
-from core.base_module import BaseModule, ScanResult, Finding
+from core.base_module import BaseModule, Finding, ScanResult
 
 class Module(BaseModule):
     name = "myplugin"
@@ -92,36 +132,55 @@ class Module(BaseModule):
 
     def run(self, target: str, **kwargs) -> ScanResult:
         result = ScanResult(module=self.name, target=target)
-        # your logic here
         result.add_finding(Finding(
             title="Example Finding",
             severity="high",
             description="Something bad was found",
+            remediation="How to fix it",
         ))
         return result
 ```
 
-Then run it:
 ```bash
 python cli.py plugin plugins/myplugin.py https://target.com
 ```
 
-## Roadmap
+## Web Dashboard
 
-- [ ] Subdomain enumeration (Day 2)
-- [ ] Port scanner (Day 3)
-- [ ] Directory brute force (Day 4)
-- [ ] SQL injection scanner (Day 5)
-- [ ] XSS scanner (Day 6)
-- [ ] HTML report generation (Day 7)
-- [ ] Network banner grabber (Day 8)
-- [ ] Service enumeration (Day 9)
-- [ ] Shodan integration (Day 10)
-- [ ] CVE lookup (Day 11)
-- [ ] JWT analyzer (Day 12)
-- [ ] CORS misconfiguration checker (Day 13)
-- [ ] Open redirect scanner (Day 14)
-- [ ] SSRF detector (Day 15)
+```bash
+python cli.py dashboard
+# Open http://localhost:5000
+```
+
+## Docker
+
+```bash
+# Run scan inside Docker
+docker run --rm -v $(pwd)/output:/app/output \
+  redscope scan https://example.com --all-web --report html
+
+# Launch dashboard
+docker run --rm -p 5000:5000 redscope dashboard --host 0.0.0.0
+
+# docker-compose (dashboard profile)
+docker compose --profile dashboard up -d
+```
+
+## Development
+
+```bash
+# Install dev dependencies
+pip install -e ".[dev]"
+
+# Run tests
+pytest tests/ -v --cov
+
+# Lint
+black . && isort . && flake8 .
+
+# Build docs locally
+mkdocs serve
+```
 
 ## License
 

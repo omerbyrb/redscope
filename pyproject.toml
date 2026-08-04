@@ -1,0 +1,69 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "redscope"
+version = "1.0.0"
+description = "Modular Penetration Testing Framework"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "omerbyrb", email = "bayirbasio@gmail.com" }]
+keywords = ["security", "penetration-testing", "recon", "vulnerability-scanner", "hacking"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Information Technology",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+    "Topic :: System :: Networking",
+]
+requires-python = ">=3.10"
+dependencies = [
+    "click>=8.1",
+    "rich>=13.0",
+    "requests>=2.31",
+    "dnspython>=2.4",
+    "python-nmap>=0.7",
+    "flask>=3.0",
+]
+
+[project.optional-dependencies]
+docs = ["mkdocs-material>=9.0"]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "black>=24.0",
+    "isort>=5.0",
+    "flake8>=7.0",
+    "pip-audit>=2.0",
+]
+
+[project.scripts]
+redscope = "cli:cli"
+
+[project.urls]
+Homepage = "https://omerbyrb.github.io/redscope"
+Repository = "https://github.com/omerbyrb/redscope"
+Documentation = "https://omerbyrb.github.io/redscope"
+"Bug Tracker" = "https://github.com/omerbyrb/redscope/issues"
+
+[tool.setuptools.packages.find]
+exclude = ["tests*", "docs*", "site*"]
+
+[tool.black]
+line-length = 120
+target-version = ["py310", "py311", "py312"]
+
+[tool.isort]
+profile = "black"
+line_length = 120
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v"
