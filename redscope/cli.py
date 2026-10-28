@@ -14,6 +14,7 @@ from redscope import __version__
 from redscope.core.config import CONFIG_PATH, load_config, save_config
 from redscope.core.engine import Engine
 from redscope.core.logger import log
+from redscope.core.plugin_loader import list_modules, module_category
 
 console = Console()
 
@@ -160,20 +161,8 @@ def list_cmd():
     table.add_column("Name", style="bold cyan")
     table.add_column("Category")
 
-    modules = {
-        "dns": "recon",
-        "subdomain": "recon",
-        "portscan": "recon",
-        "headers": "web",
-        "dirbrute": "web",
-        "sqli": "web",
-        "xss": "web",
-        "banner": "network",
-        "serviceenum": "network",
-        "htmlreport": "report",
-        "jsonreport": "report",
-    }
-    for name, category in modules.items():
+    for name in list_modules():
+        category = module_category(name)
         color = {
             "recon": "green",
             "web": "yellow",

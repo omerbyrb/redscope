@@ -9,17 +9,32 @@ from redscope.core.logger import log
 
 _BUILTIN_MODULES: Dict[str, str] = {
     # recon
+    "dns": "redscope.modules.recon.dns",
     "subdomain": "redscope.modules.recon.subdomain",
     "portscan": "redscope.modules.recon.portscan",
-    "dns": "redscope.modules.recon.dns",
+    "emailsec": "redscope.modules.recon.emailsec",
+    "takeover": "redscope.modules.recon.takeover",
+    "shodan": "redscope.modules.recon.shodan",
     # web
+    "headers": "redscope.modules.web.headers",
+    "dirbrute": "redscope.modules.web.dirbrute",
     "sqli": "redscope.modules.web.sqli",
     "xss": "redscope.modules.web.xss",
-    "dirbrute": "redscope.modules.web.dirbrute",
-    "headers": "redscope.modules.web.headers",
+    "cors": "redscope.modules.web.cors",
+    "openredirect": "redscope.modules.web.openredirect",
+    "ssrf": "redscope.modules.web.ssrf",
+    "jwt": "redscope.modules.web.jwt",
+    "lfi": "redscope.modules.web.lfi",
+    "cmdi": "redscope.modules.web.cmdi",
+    "xxe": "redscope.modules.web.xxe",
+    "idor": "redscope.modules.web.idor",
+    "waf": "redscope.modules.web.waf",
     # network
+    "ssltls": "redscope.modules.network.ssltls",
     "banner": "redscope.modules.network.banner",
+    "cvelookup": "redscope.modules.network.cvelookup",
     "serviceenum": "redscope.modules.network.serviceenum",
+    "osfingerprint": "redscope.modules.network.osfingerprint",
     # report
     "htmlreport": "redscope.modules.report.html",
     "jsonreport": "redscope.modules.report.json_report",
@@ -28,6 +43,11 @@ _BUILTIN_MODULES: Dict[str, str] = {
 
 def list_modules() -> List[str]:
     return list(_BUILTIN_MODULES.keys())
+
+
+def module_category(name: str) -> str:
+    """Category of a built-in module, taken from its package path (recon, web, network, report)."""
+    return _BUILTIN_MODULES[name].split(".")[2]
 
 
 def load_module(name: str, config: dict) -> Optional[BaseModule]:
