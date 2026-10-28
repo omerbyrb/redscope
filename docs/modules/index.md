@@ -17,7 +17,7 @@ Gather information about a target before active testing.
 
 Run all recon modules:
 ```bash
-python cli.py scan example.com --all-recon
+redscope scan example.com --all-recon
 ```
 
 ## Web Modules
@@ -42,7 +42,7 @@ Test web applications for common vulnerabilities.
 
 Run all web modules:
 ```bash
-python cli.py scan https://example.com --all-web
+redscope scan https://example.com --all-web
 ```
 
 ## Network Modules
@@ -60,7 +60,7 @@ Deep inspection of network services and infrastructure.
 ## Running Everything
 
 ```bash
-python cli.py scan https://example.com --all --save --report html
+redscope scan https://example.com --all --save --report html
 ```
 
 This runs all 24 modules and produces a self-contained HTML report in `output/`.

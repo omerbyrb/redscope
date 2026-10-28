@@ -43,11 +43,6 @@
 ```bash
 git clone https://github.com/omerbyrb/redscope
 cd redscope
-pip install -r requirements.txt
-```
-
-Or install as a package:
-```bash
 pip install -e .
 ```
 
@@ -62,22 +57,22 @@ docker run --rm redscope --version
 
 ```bash
 # List all modules
-python cli.py list
+redscope list
 
 # DNS recon
-python cli.py scan example.com --modules dns
+redscope scan example.com --modules dns
 
 # HTTP security headers
-python cli.py scan https://example.com --modules headers
+redscope scan https://example.com --modules headers
 
 # Full recon sweep
-python cli.py scan example.com --all-recon --save
+redscope scan example.com --all-recon --save
 
 # Full web assessment with HTML report
-python cli.py scan https://example.com --all-web --report html
+redscope scan https://example.com --all-web --report html
 
 # Everything
-python cli.py scan https://example.com --all --save --report html
+redscope scan https://example.com --all --save --report html
 ```
 
 ## Modules
@@ -124,7 +119,7 @@ python cli.py scan https://example.com --all --save --report html
 ## Writing a Plugin
 
 ```python
-from core.base_module import BaseModule, Finding, ScanResult
+from redscope.core.base_module import BaseModule, Finding, ScanResult
 
 class Module(BaseModule):
     name = "myplugin"
@@ -142,13 +137,13 @@ class Module(BaseModule):
 ```
 
 ```bash
-python cli.py plugin plugins/myplugin.py https://target.com
+redscope plugin plugins/myplugin.py https://target.com
 ```
 
 ## Web Dashboard
 
 ```bash
-python cli.py dashboard
+redscope dashboard
 # Open http://localhost:5000
 ```
 

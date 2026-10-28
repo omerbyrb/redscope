@@ -2,6 +2,24 @@
 
 All notable changes to RedScope are documented here.
 
+## [Unreleased]
+
+### Changed
+- **Breaking:** all code now lives in the `redscope` package. Imports change from
+  `core.*` / `modules.*` to `redscope.core.*` / `redscope.modules.*`; custom plugins must
+  update their imports. Run the CLI with `redscope` or `python -m redscope`.
+- Bundled wordlists ship inside the package and are resolved relative to it.
+
+### Added
+- Optional `check_id` on `Finding` (`<module>.<check>`, e.g. `ssltls.weak_protocol`): a
+  stable identifier that does not change when a finding's title is reworded.
+- `module_category()` helper in the plugin loader.
+
+### Fixed
+- `pip install` failed because `pyproject.toml` named a non-existent build backend.
+- The module registry listed only 11 of 26 modules, so `ssltls`, `emailsec`, `cvelookup`
+  and others failed with "Unknown module". `redscope list` now shows every module.
+
 ## [1.0.0] — 2026-08-04
 
 ### Added — Core Framework (Days 1–3)

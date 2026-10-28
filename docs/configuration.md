@@ -5,7 +5,7 @@ RedScope loads its configuration from `~/.redscope/config.json`. If this file do
 ## Initialize Config
 
 ```bash
-python cli.py init
+redscope init
 ```
 
 This creates `~/.redscope/config.json` with all default values.
@@ -23,7 +23,7 @@ This creates `~/.redscope/config.json` with all default values.
   },
   "recon": {
     "dns_resolvers": ["8.8.8.8", "1.1.1.1", "9.9.9.9"],
-    "subdomain_wordlist": "wordlists/subdomains.txt",
+    "subdomain_wordlist": "redscope/wordlists/subdomains.txt",
     "port_scan_top": 1000
   },
   "web": {
@@ -47,13 +47,13 @@ You can override config values at runtime:
 
 ```bash
 # Use more threads
-python cli.py --threads 20 scan example.com --all-recon
+redscope --threads 20 scan example.com --all-recon
 
 # Longer timeout for slow targets
-python cli.py --timeout 30 scan https://example.com --modules sqli
+redscope --timeout 30 scan https://example.com --modules sqli
 
 # Custom config file
-python cli.py --config /path/to/myconfig.json scan example.com --all
+redscope --config /path/to/myconfig.json scan example.com --all
 ```
 
 ## Custom Wordlists
@@ -72,10 +72,10 @@ To use custom wordlists, set them in the config:
 }
 ```
 
-Built-in wordlists are in `wordlists/`:
+Built-in wordlists are in `redscope/wordlists/`:
 
-- `wordlists/subdomains.txt` — 100+ common subdomains
-- `wordlists/directories.txt` — 100+ common web paths
+- `redscope/wordlists/subdomains.txt` — 100+ common subdomains
+- `redscope/wordlists/directories.txt` — 100+ common web paths
 
 ## Shodan API Key
 

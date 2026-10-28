@@ -2,8 +2,8 @@ from unittest.mock import MagicMock, patch
 
 import requests
 
-from core.config import load_config
-from modules.web.headers import Module as HeadersModule
+from redscope.core.config import load_config
+from redscope.modules.web.headers import Module as HeadersModule
 
 
 def _make_response(headers: dict, status_code: int = 200, url: str = "https://example.com"):
@@ -28,7 +28,7 @@ def test_all_security_headers_present():
         "Permissions-Policy": "geolocation=()",
     }
 
-    with patch("modules.web.headers.requests.get", return_value=_make_response(good_headers)):
+    with patch("redscope.modules.web.headers.requests.get", return_value=_make_response(good_headers)):
         result = mod.run("https://example.com")
 
     missing = [f for f in result.findings if "Missing" in f.title]
@@ -47,7 +47,7 @@ def test_missing_csp_flagged():
         "Permissions-Policy": "geolocation=()",
     }
 
-    with patch("modules.web.headers.requests.get", return_value=_make_response(headers)):
+    with patch("redscope.modules.web.headers.requests.get", return_value=_make_response(headers)):
         result = mod.run("https://example.com")
 
     titles = [f.title for f in result.findings]
@@ -69,7 +69,7 @@ def test_server_header_leaks():
         "Permissions-Policy": "geolocation=()",
     }
 
-    with patch("modules.web.headers.requests.get", return_value=_make_response(headers)):
+    with patch("redscope.modules.web.headers.requests.get", return_value=_make_response(headers)):
         result = mod.run("https://example.com")
 
     titles = [f.title for f in result.findings]
@@ -81,7 +81,7 @@ def test_no_crash_on_connection_error():
     mod = HeadersModule(cfg)
 
     with patch(
-        "modules.web.headers.requests.get",
+        "redscope.modules.web.headers.requests.get",
         side_effect=requests.exceptions.ConnectionError,
     ):
         result = mod.run("https://unreachable.example.com")

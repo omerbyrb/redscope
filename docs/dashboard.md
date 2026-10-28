@@ -7,7 +7,7 @@ RedScope includes a Flask-based web dashboard for running and monitoring scans t
 === "Local"
 
     ```bash
-    python cli.py dashboard
+    redscope dashboard
     ```
 
     Opens on `http://localhost:5000`
@@ -22,7 +22,7 @@ RedScope includes a Flask-based web dashboard for running and monitoring scans t
 === "Custom Port"
 
     ```bash
-    python cli.py dashboard --port 8080
+    redscope dashboard --port 8080
     ```
 
 ## Dashboard Features

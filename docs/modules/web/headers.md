@@ -7,7 +7,7 @@ Analyzes HTTP response headers for missing security controls and information lea
 ## Usage
 
 ```bash
-python cli.py scan https://example.com --modules headers
+redscope scan https://example.com --modules headers
 ```
 
 ## Checks

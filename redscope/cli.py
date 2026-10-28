@@ -1,0 +1,208 @@
+#!/usr/bin/env python3
+"""
+RedScope — Modular Penetration Testing Framework
+"""
+
+from pathlib import Path
+
+import click
+from rich.console import Console
+from rich.panel import Panel
+from rich.text import Text
+
+from redscope import __version__
+from redscope.core.config import CONFIG_PATH, load_config, save_config
+from redscope.core.engine import Engine
+from redscope.core.logger import log
+from redscope.core.plugin_loader import list_modules, module_category
+
+console = Console()
+
+BANNER = """
+██████╗ ███████╗██████╗ ███████╗ ██████╗ ██████╗ ██████╗ ███████╗
+██╔══██╗██╔════╝██╔══██╗██╔════╝██╔════╝██╔═══██╗██╔══██╗██╔════╝
+██████╔╝█████╗  ██║  ██║███████╗██║     ██║   ██║██████╔╝█████╗
+██╔══██╗██╔══╝  ██║  ██║╚════██║██║     ██║   ██║██╔═══╝ ██╔══╝
+██║  ██║███████╗██████╔╝███████║╚██████╗╚██████╔╝██║     ███████╗
+╚═╝  ╚═╝╚══════╝╚═════╝ ╚══════╝ ╚═════╝ ╚═════╝ ╚═╝     ╚══════╝
+"""
+
+
+def print_banner():
+    console.print(Text(BANNER, style="bold red"))
+    console.print(
+        Panel(
+            "[bold cyan]Modular Penetration Testing Framework[/]\n"
+            "[dim]Use responsibly. Only test systems you are authorized to test.[/]",
+            border_style="red",
+            expand=False,
+        )
+    )
+
+
+@click.group()
+@click.version_option(__version__, prog_name="RedScope")
+@click.option("--config", "-c", type=click.Path(), default=None, help="Path to config file")
+@click.option("--output", "-o", default="output", help="Output directory")
+@click.option("--threads", "-t", type=int, default=None, help="Number of threads")
+@click.option("--quiet", "-q", is_flag=True, help="Suppress banner")
+@click.pass_context
+def cli(ctx, config, output, threads, quiet):
+    ctx.ensure_object(dict)
+    if not quiet:
+        print_banner()
+
+    cfg = load_config(Path(config) if config else None)
+    if threads:
+        cfg["general"]["threads"] = threads
+    cfg["general"]["output_dir"] = output
+
+    ctx.obj["config"] = cfg
+    ctx.obj["engine"] = Engine()
+    ctx.obj["engine"].config = cfg
+    ctx.obj["output"] = output
+
+
+@cli.command()
+@click.argument("target")
+@click.option("--modules", "-m", multiple=True, help="Modules to run (can specify multiple)")
+@click.option("--all-recon", is_flag=True, help="Run all recon modules")
+@click.option("--all-web", is_flag=True, help="Run all web modules")
+@click.option("--all", "run_all", is_flag=True, help="Run every module")
+@click.option("--save", "-s", is_flag=True, help="Save results to JSON")
+@click.option(
+    "--report",
+    "-r",
+    type=click.Choice(["html", "markdown", "json", "all"]),
+    default=None,
+    help="Generate report after scan",
+)
+@click.pass_context
+def scan(ctx, target, modules, all_recon, all_web, run_all, save, report):
+    """Run one or more modules against a target."""
+    engine: Engine = ctx.obj["engine"]
+
+    run_modules = list(modules)
+
+    if run_all:
+        run_modules = [
+            "dns",
+            "subdomain",
+            "portscan",
+            "emailsec",
+            "takeover",
+            "headers",
+            "dirbrute",
+            "sqli",
+            "xss",
+            "cors",
+            "openredirect",
+            "ssrf",
+            "jwt",
+            "lfi",
+            "cmdi",
+            "xxe",
+            "idor",
+            "waf",
+            "ssltls",
+            "banner",
+            "cvelookup",
+            "serviceenum",
+            "osfingerprint",
+            "shodan",
+        ]
+    if all_recon:
+        run_modules.extend(["dns", "subdomain", "portscan", "emailsec", "takeover", "shodan"])
+    if all_web:
+        run_modules.extend(
+            [
+                "headers",
+                "dirbrute",
+                "sqli",
+                "xss",
+                "cors",
+                "openredirect",
+                "ssrf",
+                "jwt",
+                "lfi",
+                "cmdi",
+                "xxe",
+                "idor",
+                "waf",
+            ]
+        )
+
+    if not run_modules:
+        log.error("No modules specified. Use --modules, --all-recon, --all-web, or --all")
+        raise click.Abort()
+
+    for mod in run_modules:
+        engine.run_module(mod, target)
+
+    if save:
+        out = Path(ctx.obj["output"]) / f"scan_{target.replace('://', '_').replace('/', '_')}.json"
+        engine.save_results(out)
+
+    if report in ("html", "all"):
+        engine.generate_html_report(target)
+    if report in ("markdown", "all"):
+        engine.generate_markdown_report(target)
+    if report in ("json", "all"):
+        engine.generate_json_report(target)
+
+
+@cli.command("list")
+def list_cmd():
+    """List all available modules."""
+    from rich import box
+    from rich.table import Table
+
+    table = Table(title="Available Modules", box=box.ROUNDED)
+    table.add_column("Name", style="bold cyan")
+    table.add_column("Category")
+
+    for name in list_modules():
+        category = module_category(name)
+        color = {
+            "recon": "green",
+            "web": "yellow",
+            "network": "cyan",
+            "report": "blue",
+        }.get(category, "white")
+        table.add_row(name, f"[{color}]{category}[/]")
+
+    console.print(table)
+
+
+@cli.command()
+@click.pass_context
+def init(ctx):
+    """Initialize RedScope config in ~/.redscope/config.json"""
+    save_config(ctx.obj["config"])
+    log.info(f"Config saved to [green]{CONFIG_PATH}[/]")
+
+
+@cli.command()
+@click.argument("plugin_path", type=click.Path(exists=True))
+@click.argument("target")
+@click.pass_context
+def plugin(ctx, plugin_path, target):
+    """Run a custom plugin against a target."""
+    engine: Engine = ctx.obj["engine"]
+    engine.run_plugin(Path(plugin_path), target)
+
+
+@cli.command()
+@click.option("--host", default="127.0.0.1", help="Host to bind (default: 127.0.0.1)")
+@click.option("--port", default=5000, help="Port to bind (default: 5000)")
+@click.option("--debug", is_flag=True, help="Enable Flask debug mode")
+def dashboard(host, port, debug):
+    """Launch the RedScope web dashboard."""
+    from redscope.dashboard.app import run
+
+    log.info(f"Starting dashboard at [bold green]http://{host}:{port}[/]")
+    run(host=host, port=port, debug=debug)
+
+
+if __name__ == "__main__":
+    cli(obj={})

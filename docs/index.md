@@ -49,13 +49,13 @@ It is built to be:
 ```bash
 # Clone and install
 git clone https://github.com/omerbyrb/redscope
-cd redscope && pip install -r requirements.txt
+cd redscope && pip install -e .
 
 # Full recon on a target
-python cli.py scan example.com --all-recon --save --report html
+redscope scan example.com --all-recon --save --report html
 
 # Web vulnerability assessment
-python cli.py scan https://example.com --all-web --save --report html
+redscope scan https://example.com --all-web --save --report html
 ```
 
 ## Getting Started

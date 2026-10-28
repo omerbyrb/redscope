@@ -6,16 +6,16 @@ After [installing RedScope](installation.md), run your first scan:
 
 ```bash
 # DNS reconnaissance on a domain
-python cli.py scan example.com --modules dns
+redscope scan example.com --modules dns
 
 # HTTP security headers on a web app
-python cli.py scan https://example.com --modules headers
+redscope scan https://example.com --modules headers
 ```
 
 ## List Available Modules
 
 ```bash
-python cli.py list
+redscope list
 ```
 
 Output:
@@ -38,21 +38,21 @@ Output:
 === "All Recon"
 
     ```bash
-    python cli.py scan example.com --all-recon --save
+    redscope scan example.com --all-recon --save
     ```
     Runs: `dns`, `subdomain`, `portscan`, `takeover`, `emailsec`, `shodan`
 
 === "All Web"
 
     ```bash
-    python cli.py scan https://example.com --all-web --save
+    redscope scan https://example.com --all-web --save
     ```
     Runs: `headers`, `dirbrute`, `sqli`, `xss`, `cors`, `openredirect`, `ssrf`, `jwt`, `waf`, `lfi`, `cmdi`, `xxe`, `idor`
 
 === "Full Scan"
 
     ```bash
-    python cli.py scan https://example.com --all --save --report html
+    redscope scan https://example.com --all --save --report html
     ```
     Runs all recon + all web modules and generates an HTML report.
 
@@ -60,13 +60,13 @@ Output:
 
 ```bash
 # Save JSON results
-python cli.py scan example.com --modules dns portscan --save
+redscope scan example.com --modules dns portscan --save
 
 # Generate HTML report
-python cli.py scan https://example.com --all-web --report html
+redscope scan https://example.com --all-web --report html
 
 # Save JSON + generate HTML
-python cli.py scan https://example.com --all-web --save --report html
+redscope scan https://example.com --all-web --save --report html
 ```
 
 Results are saved to `output/<target>/<timestamp>/`.
@@ -75,10 +75,10 @@ Results are saved to `output/<target>/<timestamp>/`.
 
 ```bash
 # Multiple modules in one run
-python cli.py scan https://example.com --modules sqli xss cors jwt
+redscope scan https://example.com --modules sqli xss cors jwt
 
 # Recon + web combo
-python cli.py scan https://example.com --modules dns headers portscan sqli
+redscope scan https://example.com --modules dns headers portscan sqli
 ```
 
 ## Scan Options

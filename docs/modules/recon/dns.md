@@ -7,7 +7,7 @@ Enumerates DNS records, attempts zone transfers, checks for dangling CNAMEs, and
 ## Usage
 
 ```bash
-python cli.py scan example.com --modules dns
+redscope scan example.com --modules dns
 ```
 
 ## What It Checks
