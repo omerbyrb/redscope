@@ -29,6 +29,7 @@ class Module(BaseModule):
                     cvss=7.5,                 # optional CVSS score
                     cve="CVE-2024-12345",     # optional CVE
                     tags=["web", "custom"],   # optional tags
+                    check_id="myplugin.something_found",  # optional stable id: <module>.<check>
                 )
             )
 
