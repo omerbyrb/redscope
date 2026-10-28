@@ -1,3 +1,5 @@
+import pytest
+
 from redscope.core.base_module import BaseModule, Finding, ScanResult
 from redscope.core.config import load_config
 
@@ -85,3 +87,16 @@ def test_validate_target():
 def test_repr():
     mod = DummyModule(_cfg())
     assert "dummy" in repr(mod)
+
+
+def test_finding_check_id_defaults_to_none_and_is_serialised():
+    assert Finding(title="t", severity="info", description="d").to_dict()["check_id"] is None
+
+    f = Finding(title="t", severity="high", description="d", check_id="ssltls.weak_protocol")
+    assert f.to_dict()["check_id"] == "ssltls.weak_protocol"
+
+
+@pytest.mark.parametrize("bad", ["", "ssltls", "SSLTLS.Weak", "ssltls.weak protocol", ".weak", "ssltls."])
+def test_finding_rejects_malformed_check_id(bad):
+    with pytest.raises(ValueError, match="check_id"):
+        Finding(title="t", severity="high", description="d", check_id=bad)
