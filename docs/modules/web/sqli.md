@@ -7,7 +7,7 @@ Detects SQL injection vulnerabilities using error-based and time-based blind tec
 ## Usage
 
 ```bash
-python cli.py scan https://example.com/page?id=1 --modules sqli
+redscope scan https://example.com/page?id=1 --modules sqli
 ```
 
 ## Techniques

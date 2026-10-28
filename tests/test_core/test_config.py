@@ -2,7 +2,7 @@ import json
 import tempfile
 from pathlib import Path
 
-from core.config import _deep_merge, load_config, save_config
+from redscope.core.config import _deep_merge, load_config, save_config
 
 
 def test_load_default_config():

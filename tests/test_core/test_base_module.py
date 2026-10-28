@@ -1,5 +1,5 @@
-from core.base_module import BaseModule, Finding, ScanResult
-from core.config import load_config
+from redscope.core.base_module import BaseModule, Finding, ScanResult
+from redscope.core.config import load_config
 
 
 class DummyModule(BaseModule):

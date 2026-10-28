@@ -1,11 +1,11 @@
 # Plugin Development
 
-RedScope's plugin system lets you write custom modules in minutes. Drop a `.py` file in the `plugins/` directory and run it with `python cli.py plugin`.
+RedScope's plugin system lets you write custom modules in minutes. Drop a `.py` file in the `plugins/` directory and run it with `redscope plugin`.
 
 ## Plugin Template
 
 ```python
-from core.base_module import BaseModule, Finding, ScanResult
+from redscope.core.base_module import BaseModule, Finding, ScanResult
 
 
 class Module(BaseModule):
@@ -43,7 +43,7 @@ class Module(BaseModule):
 ## Running a Plugin
 
 ```bash
-python cli.py plugin plugins/myplugin.py https://target.com
+redscope plugin plugins/myplugin.py https://target.com
 ```
 
 ## Finding Severities
@@ -101,7 +101,7 @@ RedScope uses Rich markup in log messages — `[bold]`, `[red]`, `[green]`, etc.
 
 ```python
 import requests
-from core.base_module import BaseModule, Finding, ScanResult
+from redscope.core.base_module import BaseModule, Finding, ScanResult
 
 
 class Module(BaseModule):
@@ -149,5 +149,5 @@ class Module(BaseModule):
 
 Run it:
 ```bash
-python cli.py plugin plugins/securitytxt.py https://example.com
+redscope plugin plugins/securitytxt.py https://example.com
 ```

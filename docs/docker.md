@@ -75,4 +75,4 @@ docker run --rm ghcr.io/omerbyrb/redscope:latest --version
 - Installed system tools: `nmap`, `iputils-ping`, `dnsutils`, `netcat-openbsd`
 - Working directory: `/app`
 - Default port: `5000` (dashboard)
-- Entrypoint: `docker-entrypoint.sh` → routes to `python cli.py`
+- Entrypoint: `docker-entrypoint.sh` → routes to `python -m redscope`

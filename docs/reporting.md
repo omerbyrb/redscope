@@ -7,7 +7,7 @@ RedScope generates reports in three formats: **HTML**, **JSON**, and **Markdown*
 The HTML report is a single self-contained file with no external dependencies (no CDN, no internet required). It features a dark theme, collapsible findings, and filter-by-severity buttons.
 
 ```bash
-python cli.py scan https://example.com --all-web --report html
+redscope scan https://example.com --all-web --report html
 ```
 
 Output: `output/<target>/<timestamp>/report.html`
@@ -24,7 +24,7 @@ Features:
 Machine-readable output suitable for integration with other tools, SIEM, or ticket systems.
 
 ```bash
-python cli.py scan https://example.com --all-web --save
+redscope scan https://example.com --all-web --save
 ```
 
 Output: `output/<target>/<timestamp>/results.json`
@@ -68,7 +68,7 @@ Structure:
 GitHub-flavored Markdown suitable for issue trackers and documentation.
 
 ```bash
-python cli.py scan https://example.com --all-web --report markdown
+redscope scan https://example.com --all-web --report markdown
 ```
 
 Output: `output/<target>/<timestamp>/report.md`
@@ -92,10 +92,10 @@ output/
 ## Generating All Formats
 
 ```bash
-python cli.py scan https://example.com --all --save --report html
+redscope scan https://example.com --all --save --report html
 ```
 
 Then generate Markdown separately:
 ```bash
-python cli.py scan https://example.com --all --report markdown
+redscope scan https://example.com --all --report markdown
 ```

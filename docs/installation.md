@@ -11,14 +11,14 @@
 ```bash
 git clone https://github.com/omerbyrb/redscope
 cd redscope
-pip install -r requirements.txt
+pip install -e .
 ```
 
 Verify the installation:
 
 ```bash
-python cli.py --version
-python cli.py list
+redscope --version
+redscope list
 ```
 
 ## Docker Installation
