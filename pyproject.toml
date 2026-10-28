@@ -1,10 +1,10 @@
 [build-system]
 requires = ["setuptools>=68", "wheel"]
-build-backend = "setuptools.backends.legacy:build"
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "redscope"
-version = "1.0.0"
+dynamic = ["version"]
 description = "Modular Penetration Testing Framework"
 readme = "README.md"
 license = { text = "MIT" }
@@ -45,7 +45,7 @@ dev = [
 ]
 
 [project.scripts]
-redscope = "cli:cli"
+redscope = "redscope.cli:cli"
 
 [project.urls]
 Homepage = "https://omerbyrb.github.io/redscope"
@@ -53,8 +53,14 @@ Repository = "https://github.com/omerbyrb/redscope"
 Documentation = "https://omerbyrb.github.io/redscope"
 "Bug Tracker" = "https://github.com/omerbyrb/redscope/issues"
 
+[tool.setuptools.dynamic]
+version = { attr = "redscope.__version__" }
+
 [tool.setuptools.packages.find]
-exclude = ["tests*", "docs*", "site*"]
+include = ["redscope*"]
+
+[tool.setuptools.package-data]
+redscope = ["wordlists/*.txt"]
 
 [tool.black]
 line-length = 120
