@@ -1,9 +1,14 @@
+import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from redscope.core.logger import setup_logger
+
+# "<module>.<check>", e.g. "ssltls.weak_protocol". Stable across releases so that
+# tools consuming findings (such as compliance mappers) never depend on titles.
+CHECK_ID_PATTERN = re.compile(r"^[a-z0-9_]+(\.[a-z0-9_]+)+$")
 
 
 @dataclass
@@ -16,6 +21,7 @@ class Finding:
     cvss: Optional[float] = None
     cve: Optional[str] = None
     tags: List[str] = field(default_factory=list)
+    check_id: Optional[str] = None
     timestamp: str = field(default_factory=lambda: datetime.utcnow().isoformat())
 
     def to_dict(self) -> Dict[str, Any]:
@@ -28,8 +34,13 @@ class Finding:
             "cvss": self.cvss,
             "cve": self.cve,
             "tags": self.tags,
+            "check_id": self.check_id,
             "timestamp": self.timestamp,
         }
+
+    def __post_init__(self) -> None:
+        if self.check_id is not None and not CHECK_ID_PATTERN.match(self.check_id):
+            raise ValueError(f"check_id must look like '<module>.<check>', got {self.check_id!r}")
 
 
 @dataclass
