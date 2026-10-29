@@ -215,6 +215,7 @@ class Module(BaseModule):
                 Finding(
                     title=f"{len(open_ports)} Open Ports Found",
                     severity="info",
+                    check_id="portscan.open_ports_summary",
                     description="\n".join(
                         f"{p['port']}/tcp  {p.get('service','?')}  {p.get('banner','')}" for p in open_ports
                     ),
@@ -230,6 +231,7 @@ class Module(BaseModule):
                     Finding(
                         title=title,
                         severity=severity,
+                        check_id="portscan.risky_service_exposed",
                         description=f"Port {port}/tcp ({port_info.get('service','?')}) is open and publicly reachable on {host}",
                         evidence=port_info.get("banner", ""),
                         remediation=remediation,

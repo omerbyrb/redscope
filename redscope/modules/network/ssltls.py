@@ -124,6 +124,7 @@ class Module(BaseModule):
                     Finding(
                         title="SSL Certificate Expired",
                         severity="critical",
+                        check_id="ssltls.cert_expired",
                         description=f"Certificate expired on {not_after_str}. All connections show security warnings.",
                         evidence=f"Not After: {not_after_str}",
                         remediation="Renew the SSL certificate immediately.",
@@ -135,6 +136,7 @@ class Module(BaseModule):
                     Finding(
                         title=f"SSL Certificate Expiring Soon ({days_left} days)",
                         severity="high",
+                        check_id="ssltls.cert_expiring_soon",
                         description=f"Certificate expires in {days_left} days on {not_after_str}.",
                         evidence=f"Not After: {not_after_str}",
                         remediation="Renew the certificate before it expires.",
@@ -146,6 +148,7 @@ class Module(BaseModule):
                     Finding(
                         title=f"SSL Certificate Expiring in {days_left} Days",
                         severity="medium",
+                        check_id="ssltls.cert_expiring_soon",
                         description=f"Certificate expires on {not_after_str}.",
                         evidence=f"Not After: {not_after_str}",
                         remediation="Plan certificate renewal soon.",
@@ -160,6 +163,7 @@ class Module(BaseModule):
                     Finding(
                         title="SSL Certificate Validity Period Exceeds 398 Days",
                         severity="low",
+                        check_id="ssltls.cert_validity_too_long",
                         description=(
                             f"Certificate validity is {validity_days} days. "
                             "Browsers enforce a maximum of 398 days — older long-lived certs may be distrusted."
@@ -180,6 +184,7 @@ class Module(BaseModule):
                 Finding(
                     title="SSL Certificate Hostname Mismatch",
                     severity="critical",
+                    check_id="ssltls.cert_hostname_mismatch",
                     description=f"Certificate CN/SAN does not match host '{host}'.",
                     evidence=f"CN: {cn}\nSAN: {san}",
                     remediation="Obtain a certificate that includes the correct hostname in its SAN.",
@@ -206,6 +211,7 @@ class Module(BaseModule):
                             Finding(
                                 title=f"Deprecated Protocol Supported: {proto_name}",
                                 severity="high",
+                                check_id="ssltls.deprecated_protocol",
                                 description=(
                                     f"Server supports {proto_name}, which has known vulnerabilities "
                                     "(BEAST, POODLE) and is deprecated by RFC 8996."
@@ -235,6 +241,7 @@ class Module(BaseModule):
                             return Finding(
                                 title=f"Weak Cipher Suite in Use: {cipher_name}",
                                 severity="high",
+                                check_id="ssltls.weak_cipher",
                                 description=f"Server negotiated weak cipher '{cipher_name}' ({bits} bits).",
                                 evidence=f"Cipher: {cipher_name}, Bits: {bits}",
                                 remediation="Configure server to prefer ECDHE+AES-GCM or CHACHA20-POLY1305 ciphers.",
@@ -244,6 +251,7 @@ class Module(BaseModule):
                         return Finding(
                             title=f"Insufficient Key Length: {bits} bits",
                             severity="high",
+                            check_id="ssltls.weak_key_length",
                             description=f"Cipher key length of {bits} bits is below the recommended 128 bits minimum.",
                             evidence=f"Cipher: {cipher_name}, Bits: {bits}",
                             remediation="Use ciphers with at least 128-bit key length.",
@@ -261,6 +269,7 @@ class Module(BaseModule):
                 return Finding(
                     title="HSTS Header Missing",
                     severity="medium",
+                    check_id="ssltls.hsts_missing",
                     description="HTTPS site does not set Strict-Transport-Security header.",
                     remediation="Add: Strict-Transport-Security: max-age=31536000; includeSubDomains; preload",
                     tags=["ssl", "hsts", "headers"],
@@ -276,6 +285,7 @@ class Module(BaseModule):
                 return Finding(
                     title=f"HSTS max-age Too Short ({max_age}s)",
                     severity="low",
+                    check_id="ssltls.hsts_max_age_too_short",
                     description=f"HSTS max-age of {max_age}s is below the recommended 1 year (31536000s).",
                     evidence=f"Strict-Transport-Security: {hsts}",
                     remediation="Set max-age to at least 31536000 (1 year).",
