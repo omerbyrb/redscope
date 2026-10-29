@@ -11,7 +11,7 @@ All notable changes to RedScope are documented here.
 - Bundled wordlists ship inside the package and are resolved relative to it.
 
 ### Added
-- Optional `check_id` on `Finding` (`<module>.<check>`, e.g. `ssltls.weak_protocol`): a
+- Optional `check_id` on `Finding` (`<module>.<check>`, e.g. `ssltls.deprecated_protocol`): a
   stable identifier that does not change when a finding's title is reworded.
 - `module_category()` helper in the plugin loader.
 - `portscan`, `banner`, `cvelookup`, `serviceenum`, `ssltls` and `headers` set a `check_id`
