@@ -14,6 +14,8 @@ All notable changes to RedScope are documented here.
 - Optional `check_id` on `Finding` (`<module>.<check>`, e.g. `ssltls.weak_protocol`): a
   stable identifier that does not change when a finding's title is reworded.
 - `module_category()` helper in the plugin loader.
+- `portscan`, `banner`, `cvelookup`, `serviceenum`, `ssltls` and `headers` set a `check_id`
+  on every finding; see [Check IDs](docs/check-ids.md) for the full list.
 
 ### Fixed
 - `pip install` failed because `pyproject.toml` named a non-existent build backend.
