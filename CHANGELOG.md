@@ -2,7 +2,7 @@
 
 All notable changes to RedScope are documented here.
 
-## [Unreleased]
+## [2.0.0] — 2026-10-29
 
 ### Changed
 - **Breaking:** all code now lives in the `redscope` package. Imports change from
