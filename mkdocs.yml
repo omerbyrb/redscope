@@ -89,6 +89,7 @@ nav:
       - OS Fingerprint: modules/network/osfingerprint.md
   - Reporting: reporting.md
   - Plugin Development: plugins.md
+  - Check IDs: check-ids.md
   - Docker: docker.md
   - Dashboard: dashboard.md
   - Legal: legal.md

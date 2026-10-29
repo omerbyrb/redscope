@@ -74,6 +74,7 @@ class Module(BaseModule):
                     Finding(
                         title=f"Missing {header}",
                         severity=meta["severity"],
+                        check_id="headers.missing_security_header",
                         description=meta["description"],
                         remediation=meta["remediation"],
                         tags=["headers", "misconfiguration"],
@@ -87,6 +88,7 @@ class Module(BaseModule):
                     Finding(
                         title=f"Information Disclosure via {header}",
                         severity="info",
+                        check_id="headers.info_disclosure",
                         description=f"Server exposes technology via {header}: {headers[header.lower()]}",
                         evidence=f"{header}: {headers[header.lower()]}",
                         remediation=f"Remove or obfuscate the {header} response header",
@@ -109,6 +111,7 @@ class Module(BaseModule):
                         Finding(
                             title="HTTP Not Redirected to HTTPS",
                             severity="high",
+                            check_id="headers.http_not_redirected",
                             description="The site does not redirect HTTP requests to HTTPS",
                             evidence=f"HTTP {http_url} returned {http_resp.status_code}",
                             remediation="Configure server to redirect all HTTP traffic to HTTPS (301)",

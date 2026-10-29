@@ -119,6 +119,7 @@ class Module(BaseModule):
             return Finding(
                 title="FTP Anonymous Login Allowed",
                 severity="high",
+                check_id="serviceenum.ftp_anonymous_login",
                 description=(
                     f"FTP server at {host}:{port} accepts anonymous login. "
                     f"{len(files)} files/directories are accessible without credentials."
@@ -153,6 +154,7 @@ class Module(BaseModule):
             return Finding(
                 title="SSH Weak Algorithms Advertised",
                 severity="medium",
+                check_id="serviceenum.ssh_weak_algorithms",
                 description=f"SSH server advertises weak/deprecated algorithms: {', '.join(weak)}",
                 evidence=f"Banner: {banner[:200]}",
                 remediation="Update sshd_config to disable weak ciphers and key exchange algorithms.",
@@ -175,6 +177,7 @@ class Module(BaseModule):
                 return Finding(
                     title="SMTP Open Relay Detected",
                     severity="high",
+                    check_id="serviceenum.smtp_open_relay",
                     description=f"SMTP server at {host}:{port} relays mail for external domains — can be abused for spam/phishing.",
                     evidence=f"MAIL FROM: test@redscope-test.com → {code}\nRCPT TO: victim@external-domain.com → {code2}",
                     remediation="Restrict SMTP relay to authenticated users and trusted networks only.",
@@ -195,6 +198,7 @@ class Module(BaseModule):
                 return Finding(
                     title="SMTP VRFY Command Enabled (User Enumeration)",
                     severity="medium",
+                    check_id="serviceenum.smtp_vrfy_enabled",
                     description="SMTP VRFY command is enabled, allowing attackers to enumerate valid email addresses.",
                     evidence=f"VRFY root → {code} {msg}",
                     remediation="Disable VRFY in your MTA configuration.",
@@ -211,6 +215,7 @@ class Module(BaseModule):
                 return Finding(
                     title="SMTP EXPN Command Enabled (Mailing List Disclosure)",
                     severity="low",
+                    check_id="serviceenum.smtp_expn_enabled",
                     description="SMTP EXPN command reveals mailing list members.",
                     evidence=f"EXPN root → {banner[:100]}",
                     remediation="Disable EXPN in your MTA configuration.",
@@ -235,6 +240,7 @@ class Module(BaseModule):
                 return Finding(
                     title="DNS Open Recursion Enabled",
                     severity="high",
+                    check_id="serviceenum.dns_open_recursion",
                     description=f"DNS server at {host} allows recursive queries from any source — DDoS amplification risk.",
                     evidence="Recursive query for google.com succeeded (RA flag set)",
                     remediation="Restrict recursive queries to internal/trusted IPs only.",
@@ -258,6 +264,7 @@ class Module(BaseModule):
                 return Finding(
                     title=f"DNS Version Disclosed: {version}",
                     severity="low",
+                    check_id="serviceenum.dns_version_disclosed",
                     description="DNS server reveals its version via CHAOS TXT query, aiding targeted attacks.",
                     evidence=f"version.bind TXT: {version}",
                     remediation='Hide DNS version: add `version "not disclosed";` to named.conf options.',
@@ -288,6 +295,7 @@ class Module(BaseModule):
                 return Finding(
                     title="Redis Running Without Authentication",
                     severity="critical",
+                    check_id="serviceenum.redis_no_auth",
                     description=(
                         f"Redis at {host}:{port} accepts commands without authentication. "
                         "Full data access and potential RCE via config set + cron/SSH key injection."
@@ -310,6 +318,7 @@ class Module(BaseModule):
                 return Finding(
                     title="Elasticsearch Accessible Without Authentication",
                     severity="critical",
+                    check_id="serviceenum.elasticsearch_no_auth",
                     description=f"Elasticsearch at {host}:{port} is open — full index access without credentials.",
                     evidence=f"Cluster: {data.get('cluster_name', '?')}, Version: {data.get('version', {}).get('number', '?')}",
                     remediation="Enable X-Pack security. Bind to localhost. Use a reverse proxy with auth.",
@@ -331,6 +340,7 @@ class Module(BaseModule):
                 return Finding(
                     title="MongoDB Accessible Without Authentication",
                     severity="critical",
+                    check_id="serviceenum.mongodb_no_auth",
                     description=f"MongoDB at {host}:{port} responds to queries without credentials.",
                     evidence="MongoDB isMaster probe succeeded without authentication",
                     remediation="Enable MongoDB authentication (--auth). Bind to 127.0.0.1. Use firewall rules.",
@@ -349,6 +359,7 @@ class Module(BaseModule):
                 return Finding(
                     title="Memcached Accessible Without Authentication",
                     severity="high",
+                    check_id="serviceenum.memcached_no_auth",
                     description=f"Memcached at {host}:{port} responds to commands without auth — data exposure and DDoS amplification risk.",
                     evidence=f"stats response: {resp[:200]}",
                     remediation="Bind Memcached to 127.0.0.1. Use firewall to block port 11211 from public.",
@@ -369,6 +380,7 @@ class Module(BaseModule):
                     return Finding(
                         title="Zookeeper Accessible Without Authentication",
                         severity="high",
+                        check_id="serviceenum.zookeeper_no_auth",
                         description=f"Zookeeper at {host}:{port} exposes cluster info without authentication.",
                         evidence=f"Version: {version.group(1) if version else 'unknown'}\n{resp[:200]}",
                         remediation="Enable Zookeeper auth (SASL/Kerberos). Bind to internal interfaces only.",
@@ -387,6 +399,7 @@ class Module(BaseModule):
                 return Finding(
                     title=f"{'POP3' if port == 110 else 'IMAP'} STARTTLS Not Advertised",
                     severity="medium",
+                    check_id="serviceenum.mail_starttls_missing",
                     description=f"{'POP3' if port==110 else 'IMAP'} at {host}:{port} may transmit credentials in plaintext.",
                     evidence=f"Banner: {banner[:150]}",
                     remediation=f"Enable STARTTLS on {'POP3' if port==110 else 'IMAP'} or migrate to the TLS-only port.",
@@ -421,6 +434,7 @@ class Module(BaseModule):
                         return Finding(
                             title="SMB Signing Not Required",
                             severity="medium",
+                            check_id="serviceenum.smb_signing_not_required",
                             description=(
                                 f"SMB at {host}:445 does not require packet signing. "
                                 "This enables NTLM relay attacks (e.g., Responder + ntlmrelayx)."

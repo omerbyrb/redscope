@@ -341,6 +341,7 @@ class Module(BaseModule):
                     Finding(
                         title=f"{hit['cve_id']} — {name} {version}",
                         severity=hit["severity"],
+                        check_id="cvelookup.known_vulnerability",
                         description=hit["description"],
                         evidence=(
                             f"Software: {name} {version}"

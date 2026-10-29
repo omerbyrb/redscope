@@ -123,6 +123,7 @@ class Module(BaseModule):
                             Finding(
                                 title=f"EOL/Outdated Software: {keyword} {version}",
                                 severity=severity,
+                                check_id="banner.eol_software",
                                 description=f"{note}. Outdated software may have unpatched critical vulnerabilities.",
                                 evidence=f"Port {port}/tcp — Banner: {banner[:150]}",
                                 remediation=f"Upgrade {keyword} to the latest stable version.",
@@ -138,6 +139,7 @@ class Module(BaseModule):
                 Finding(
                     title=f"{len(banners)} Services Fingerprinted",
                     severity="info",
+                    check_id="banner.services_fingerprinted",
                     description="\n".join(
                         f"{b['port']}/tcp  {b['service']}  {b['version'] or 'version unknown'}" for b in banners
                     ),
@@ -201,6 +203,7 @@ class Module(BaseModule):
             return Finding(
                 title="Software Version Disclosed in HTTP Headers",
                 severity="low",
+                check_id="banner.version_disclosed",
                 description=(
                     "HTTP response headers reveal software names and versions, "
                     "helping attackers identify targets for known CVEs."
